@@ -1,0 +1,21 @@
+{
+  "name": "barecms",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "express": "^4.14.0",
+    "http": "0.0.0",
+    "jade": "^1.11.0",
+    "multer": "^1.1.0",
+    "q": "^1.4.1",
+    "sqlite3": "^3.1.4",
+    "squel": "^5.3.3"
+  }
+}
