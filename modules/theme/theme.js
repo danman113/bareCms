@@ -1,6 +1,9 @@
 var q = require('q');
 var fs = require('fs');
 var jade = require('jade');
+var path = require('path');
+
+
 module.exports = function(core, callback){
 	var theme = {
 		admin:{}
@@ -8,18 +11,19 @@ module.exports = function(core, callback){
 
 	console.log('Theme');
 
-	theme.addAdminPageFromFile = function( url, path, name ) {
+	theme.addAdminPageFromFile = function( url, filepath, name ) {
 		
+		filepath = path.resolve( path.dirname(require.main.filename), filepath )
 		name = name?name:url.substr(1);
 
-		core.db.getPage({'url == ':url, 'admin != ':0}).then(function(page){
+		core.db.getPage( {'url == ':url, 'admin != ':0} ).then( function( page ) {
 			
 			var html = "";
 			var valid = true;
 			
 			try {
 
-				html = fs.readFileSync(path,'utf8');
+				html = fs.readFileSync(filepath,'utf8');
 			
 			} catch ( e ) {
 
@@ -37,9 +41,11 @@ module.exports = function(core, callback){
 
 					} else {
 
-						core.db.update( 'pages', 
-										{ 'url == ':url }, 
-										{ data: html, date: (new Date()).getTime() } )
+						core.db.update( 
+							'pages', 
+							{ 'url == ':url }, 
+							{ data: html, date: (new Date()).getTime() }
+						)
 						.then( function(){
 
 							console.log( 'Updated theme!' );
@@ -58,8 +64,8 @@ module.exports = function(core, callback){
 					title:name,
 					url:url,
 					data:html,
-					date:(new Date()).getTime(),
-					options:JSON.stringify({}),
+					date:( new Date() ).getTime(),
+					options:JSON.stringify( {} ),
 					admin:1,
 					cache:1,
 				})
@@ -80,29 +86,35 @@ module.exports = function(core, callback){
 		});
 	};
 
-	theme.addFieldFromFile = function( field, path ){
-			
+	theme.addFieldFromFile = function( field, filepath ){
+		
+		filepath = path.resolve( path.dirname(require.main.filename), filepath )
 		var html = "";
 		var valid = true;
 		
 		try {
 
-			html = fs.readFileSync(path,'utf8');
+			html = fs.readFileSync( filepath, 'utf8' );
 		
 		} catch ( e ) {
-
+			
+			valid = false;
 			html = e.toString();
 		
 		}
-
-		theme.admin[field] = jade.compile(html);
+		
+		if( valid )
+			theme.admin[field] = jade.compile(html);
 
 	};
+	
 	theme.addFieldFromFile( 'nav', './themes/default/nav.jade');
 	theme.addFieldFromFile( 'head', './themes/default/adminHead.jade');
 	theme.addAdminPageFromFile('/admin','./themes/default/admin.jade');
 	theme.addAdminPageFromFile('/admin/pages','./themes/default/pages.jade');
 	theme.addAdminPageFromFile('/404','./themes/default/404.jade');
+	
 	callback();
 	return theme;
+
 };

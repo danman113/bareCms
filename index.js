@@ -26,7 +26,7 @@ core.setDb(require('./modules/db/db.js')).then(function(e){
 	console.log('Theme set');
 	return core.setRouter(require('./modules/router/router.js'));
 },function(err){
-	console.log('Theme set failed',err);
+	console.log('Theme set failed', err);
 }).then(function(){
 	console.log('Router Initialized!');
 }, function( err ){

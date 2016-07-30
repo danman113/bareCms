@@ -1,9 +1,9 @@
 var sqlite3 = require('sqlite3').verbose();
 var q = require('q');
 var squel = require('squel');
-module.exports = function(core, callback){
+module.exports = function( core, callback ) {
 	var db = {
-		db:new sqlite3.Database(core.config.db.filename,callback)
+		db: new sqlite3.Database( core.config.db.filename, callback )
 	};
 
 	db.close = function() {
@@ -19,7 +19,7 @@ module.exports = function(core, callback){
 	
 	};
 
-	db.All = function( query, params ) {
+	db._All = function( query, params ) {
 
 		var deffered = q.defer();
 		db.db.all( query, params, function( err, row ) {
@@ -32,7 +32,7 @@ module.exports = function(core, callback){
 
 	};
 
-	db.Get = function( query, params ) {
+	db._Get = function( query, params ) {
 
 		var deffered = q.defer();
 		db.db.get( query, params, function( err, row ) {
@@ -45,7 +45,7 @@ module.exports = function(core, callback){
 
 	};
 
-	db.Run = function( query, params ) {
+	db._Run = function( query, params ) {
 
 		var deffered = q.defer();
 		db.db.run( query, params, function( err, data ) {
@@ -99,11 +99,11 @@ module.exports = function(core, callback){
 
 		if( single ) {
 
-			return db.Get( query.toString(), params );
+			return db._Get( query.toString(), params );
 
 		} else {
 
-			return db.All( query.toString(), params );
+			return db._All( query.toString(), params );
 
 		}
 
@@ -136,8 +136,43 @@ module.exports = function(core, callback){
 
 		}
 
-		return db.Run( query.toString(), params );
+		return db._Run( query.toString(), params );
 
+	};
+	
+	db.insert = function ( table, data ) {
+		
+		var query = squel.insert().into( table )
+		var params = {};
+		
+	    for ( var field in data ) {
+
+			query.set( field, squel.str( '$' + field ) );
+			params[ '$' + field ] = data[ field ];
+
+		}
+		
+		return db._Run( query.toString(), params );
+	    
+	};
+	
+	db.delete = function ( table, wheres) {
+		
+		var query = squel.delete().from( table );
+		var params = {};
+		var single = false;
+		
+		for ( var key in wheres ) {
+
+			var q =  key.split( ' ' )[ 0 ];
+			query.where( key + '$' + q );
+			params[ '$' + q ] = wheres[ key ];
+
+		}
+		
+		// console.log( query.toString(), params );
+		return db._Run( query.toString(), params );
+		
 	};
 
 	db.create = function(){
@@ -146,7 +181,7 @@ module.exports = function(core, callback){
 		var pages = 'CREATE TABLE pages (' +
 			'id INTEGER PRIMARY KEY AUTOINCREMENT, ' + 
 			'title VARCHAR(100), ' +
-			'url VARCHAR(100), ' +
+			'url VARCHAR(100) UNIQUE, ' +
 			'data TEXT, '+
 			'author INTEGER, '+ 
 			'date DATETIME, '+
@@ -163,7 +198,7 @@ module.exports = function(core, callback){
 			'date DATETIME, '+
 			'options TEXT'+
 			');';
-		q.All( [db.Run( pages, {} ), db.Run( users, {} )] ).then( function() {
+		q.all( [db._Run( pages, {} ), db._Run( users, {} )] ).then( function() {
 
 			console.log('Creates successful');
 			deffered.resolve();
@@ -186,68 +221,59 @@ module.exports = function(core, callback){
 
 	db.insertPage = function( data ) {
 		
-		var deffered = q.defer();
+		var defaultData = {
+			url:'/dev/null',
+			title: 'new_page',
+			data: '| Default Page',
+			author: null,
+			date: (new Date()).getTime(),
+			options: '{}',
+			admin:0,
+			cache:1
+		}
+		
 		for (var i in data){
 			
-			data['$' + i] = data[i];
-			delete data[i];
+			defaultData[i] = data[i]
 
 		}
+		
+		console.log( defaultData );
+		return db.insert( 'pages', defaultData );
 
-		db.getPage({'url == ':data.$url}).then(function(response){
-			if(response)
-				deffered.reject(new Error('URL already in use. Use /page'+data.$url+'?edit=1 to edit it or delete it.'));
-			else 
-				return db.Run('INSERT INTO pages (title, data, author, date, options, url, admin, cache) VALUES ($title, $data, $author, $date, $options, $url, $admin, $cache)',data);
-		}).then(function(){
-			deffered.resolve();
-		}, function(err){
-			deffered.reject(err);
-		});
-		return deffered.promise;
 		
 	};
 
-	db.insertAdminPage = function(data){
+	db.verify = function() {
+		
 		var deffered = q.defer();
-		for (var i in data){
-			data['$' + i] = data[i];
-			delete data[i];
-		}
-		db.getAdminPage('url',data.$url).then(function(response){
-			if(response)
-				deffered.reject(new Error('URL already in use. Use /page'+data.$url+'?edit=1 to edit it or delete it.'));
-			else 
-				return db.Run('INSERT INTO pages (title, data, author, date, options, url, admin, cache) VALUES ($title, $data, $author, $date, $options, $url, $admin, $cache)',data);
-		}).then(function(){
-			deffered.resolve();
-		}, function(err){
-			deffered.reject(err);
-		});
-		return deffered.promise;
-	};
-
-
-	db.verify = function(){
-		var deffered = q.defer();
-		q.all([db.Get('SELECT * from pages',{}),db.Get('SELECT * from users',{})]).then(function(){
+		q.all( [ db._Get( 'SELECT * from pages', {} ), db._Get( 'SELECT * from users', {} ) ] ).then( function() {
+			
 			console.log('Tables are set');
-		},function(){
-			console.log('Tables are not set. Creating tables');
+		
+		}, function() {
+			
+			console.log( 'Tables are not set. Creating tables' );
 			return db.create();
-		}).then(function(){
+		
+			
+		} ).then( function() {
+			
 			deffered.resolve();
-		},function(){
-			console.log('Failed to create database. Failing.');
-			deffered.reject();
+		
+		}, function( err ) {
+			
+			console.log( 'Failed to create database. Failing.', err );
+			deffered.reject(err);
+		
 		});
 		// db.insertPage({$title:'hello',$data:'Faggot ' + Math.random()}).then(function(){
-		// 	return db.All('SELECT * FROM pages WHERE id = $id ORDER BY id DESC LIMIT 20',{$id:325});
+		// 	return db._All('SELECT * FROM pages WHERE id = $id ORDER BY id DESC LIMIT 20',{$id:325});
 		// }).then(function(rows){
 		// 	console.log(rows);
 		// });
-		
 		return deffered.promise;
+		
 	};
  
 	return db;

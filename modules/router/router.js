@@ -30,6 +30,7 @@ module.exports = function(core, callback){
 	};
 
 	router.cacheSet = function( req, res, fn, data) {
+		
 		fn.data = data;
 		var path = req._parsedUrl.pathname;
 		router.cache[path] = fn;
@@ -38,6 +39,8 @@ module.exports = function(core, callback){
 
 	router.sendPage = function( req, res, data ) {
 		
+		res.status(200);
+		console.log(200);
 		res.send(data({site:site,page:data.data}));
 	
 	};
@@ -89,21 +92,34 @@ module.exports = function(core, callback){
 			} else next();
 		});
 	});
-	app.put('/pages/*',function(req, res,next){
+	app.put('/pages/*',function(req, res, next){
+		
 		var path = req._parsedUrl.pathname.substr(6);
 		var lastChar = path.substr(path.length-1,path.length);
 		if(lastChar == '/' && path!='/') path = path.substr(0,path.length-1);
+		
 		var form = req.body;
 		form.url = path;
 		form.admin = 0;
 		form.cache = 1;
+		
+		if ( !form.data || !form.title ) {
+			
+			res.status( 400 );
+			res.send( {status:0,error:"Title and data field must be filled"} );
+			return false;
+			
+		}
+		
 		core.db.insertPage(form).then(function(){
+			res.status(201);
 			res.send({status:1});
 		},function(err){
+			res.status(400);
 			res.send({status:0,error:err.message});
 		});
 	});
-	app.get('/',function(req, res){
+	app.get('/',function(req, res, next){
 		var cachedResult = router.cacheGet(req,res);
 		if(cachedResult) {
 			router.sendPage(req, res, cachedResult);
@@ -122,7 +138,7 @@ module.exports = function(core, callback){
 		});
 	});
 	app.get('/debug/db',function(req, res){
-		core.db.all('SELECT * FROM pages',{}).then(function(row){
+		core.db._All('SELECT * FROM pages',{}).then(function(row){
 			res.send(row);
 		});
 	});
@@ -173,6 +189,7 @@ module.exports = function(core, callback){
 	});
 
 	app.all('/*',function(req, res){
+		res.status(404);
 		res.send('404 :C');
 	});
 	
