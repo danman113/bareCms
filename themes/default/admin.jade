@@ -2,7 +2,7 @@ doctype html
 html(lang="en")
   head
     title Admin
-    | !{ site.admin.head({site:site})}
+    | !{ admin.head({site:site})}
 
     script.
       $(function(){
@@ -27,18 +27,21 @@ html(lang="en")
               console.log(data);
               if(data.status)
                 window.location.href = '/pages'+form.url;
-              else
+              else {
+                console.log(data.error);
                 alert(data.error);
+              }
             },
-            error: function(err){
-              alert(err);
+            error: function(err, body ){
+              console.log(err);
+              alert(err.responseJSON.error);
             }
           });
           event.preventDefault();
         });
       })
   body
-    | !{ site.admin.nav({site:site}) }
+    | !{ admin.nav({site:site}) }
     h1 Build a site
     form#page
       each def,val in {url:'/',title:'Title',options:'{}'}

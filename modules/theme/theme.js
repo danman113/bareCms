@@ -70,7 +70,7 @@ module.exports = function( core, callback ) {
 					date: ( new Date() ).getTime(),
 					options: JSON.stringify( {} ),
 					admin: 1,
-					cache: 1,
+					cache: 0,
 				} ).then( function() {
 
 					console.log( 'Inserted ' + url );

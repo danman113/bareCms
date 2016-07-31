@@ -1,9 +1,9 @@
 doctype html
 html(lang="en")
   head
-    !{site.admin.head()}
+    !{admin.head()}
   body
-    !{site.admin.nav()}
+    !{admin.nav()}
     each page in pages
         a(href="/pages#{page.url}")= page.title
         br
