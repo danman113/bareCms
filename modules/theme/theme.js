@@ -108,17 +108,35 @@ module.exports = function( core, callback ) {
 
 		}
 
-		if ( valid )
-			theme.admin[ field ] = jade.compile( html );
+		if ( valid ){
+			
+			var fn;
+			try{
+				
+				fn = jade.compile( html );
+				
+			} catch( e ){
+
+				fn = function(){ return e.toString(); };
+
+			}
+			
+			theme.admin[ field ] = fn;
+		}
+	};
+	
+	theme.initTheme = function() {
+
+		theme.addFieldFromFile( 'nav', './themes/default/nav.jade' );
+		theme.addFieldFromFile( 'head', './themes/default/adminHead.jade' );
+		theme.addAdminPageFromFile( '/admin', './themes/default/admin.jade' );
+		theme.addAdminPageFromFile( '/admin/pages', './themes/default/pages.jade' );
+		theme.addAdminPageFromFile( '/404', './themes/default/404.jade' );
+		theme.addAdminPageFromFile( '/edit', './themes/default/edit.jade' );
 
 	};
-
-	theme.addFieldFromFile( 'nav', './themes/default/nav.jade' );
-	theme.addFieldFromFile( 'head', './themes/default/adminHead.jade' );
-	theme.addAdminPageFromFile( '/admin', './themes/default/admin.jade' );
-	theme.addAdminPageFromFile( '/admin/pages', './themes/default/pages.jade' );
-	theme.addAdminPageFromFile( '/404', './themes/default/404.jade' );
-
+	
+	theme.initTheme();
 	callback();
 	return theme;
 

@@ -246,6 +246,21 @@ module.exports = function( core, callback ) {
 
 	};
 
+	db.deletePage = function( page ) {
+		return db.delete(
+			'pages',
+			{ 'url == ': page, 'admin == ': 0 } 
+		)
+	};
+	
+	db.updatePage = function( page, data ){
+		return db.update(
+			'pages', 
+			{'url == ': page, 'admin == ':0 },
+			data
+		)
+	};
+
 	db.verify = function() {
 
 		var deffered = q.defer();

@@ -2,7 +2,7 @@ doctype html
 html(lang="en")
   head
     title Admin
-    | !{ admin.head({site:site})}
+    | !{ admin.head(locals)}
 
     script.
       $(function(){
@@ -41,7 +41,7 @@ html(lang="en")
         });
       })
   body
-    | !{ admin.nav({site:site}) }
+    | !{ admin.nav(locals) }
     h1 Build a site
     form#page
       each def,val in {url:'/',title:'Title',options:'{}'}

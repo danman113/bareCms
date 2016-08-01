@@ -1,9 +1,30 @@
 doctype html
 html(lang="en")
   head
-    !{admin.head()}
+    !{admin.head(locals)}
   body
-    !{admin.nav()}
-    each page in pages
-        a(href="/pages#{page.url}")= page.title
-        br
+    !{admin.nav(locals)}
+    table.table.table-striped
+      thead
+        tr
+          th Title
+          th Url
+          th Date Modified
+          th
+      tbody
+        each page in pages
+          tr
+            th
+              a(href="/pages#{page.url}")= page.title
+            th
+              span= page.url
+            th
+              span= (new Date(page.date)).toDateString()
+            th
+              button.btn-link(
+                data-delete="/pages#{page.url}"
+                data-json="{hi:1}"
+                style="font-weight:bold;"
+              ) Delete
+              a(href="/pages#{page.url}?edit=1") Edit
+              

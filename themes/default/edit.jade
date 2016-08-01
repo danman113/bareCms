@@ -1,0 +1,38 @@
+doctype html
+html(lang="en")
+  head
+    title Admin
+    | !{ admin.head(locals)}
+    script.
+        $(document).ready( function (){
+             dynamicForm('#page', function( e, data){
+                 e.preventDefault();
+                 console.log(data);
+                 $.ajax({
+                    type: 'POST',
+                    data: data,
+                    success: function(data){
+                        if(data.status){
+                            alert('Page edited!');
+                        } else {
+                            alert(data);
+                        }
+                    },
+                    error: function(err){
+                        console.log(err);
+                    }
+                });
+             });
+        });
+  body
+    | !{ admin.nav(locals) }
+    h1
+        a(href='/pages#{editPage.url}')= editPage.url
+    form#page(method="POST")
+      .form-group
+        h3 Title
+        input.form-control(type='text' name='title' value='#{editPage.title}')
+        h3 Content
+        textarea.form-control(name='data' rows='15')= editPage.data
+        br
+        input.btn.btn-primary(type='submit')

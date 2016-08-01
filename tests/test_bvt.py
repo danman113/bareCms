@@ -86,7 +86,44 @@ def test_new_page():
     assert new_page.json()['status'] != 1
     dead_page = requests.get('http://localhost:8080/pages/no_title_page')
     assert dead_page.status_code == 404
-    
+
+def test_delete():
+    page_data = {
+        "title": "Title",
+        "options": "{}",
+        "data": "| Hello"
+    }
+    new_page = requests.put('http://localhost:8080/pages/page_to_be_deleted', json=page_data)
+    assert new_page.json()['status'] == 1
+    new_page_get = requests.get('http://localhost:8080/pages/page_to_be_deleted')
+    assert new_page_get.status_code == 200
+    new_page = requests.delete('http://localhost:8080/pages/page_to_be_deleted', json=page_data)
+    assert new_page.json()['status'] == 1
+    print(new_page.text)
+    new_page_get = requests.get('http://localhost:8080/pages/page_to_be_deleted')
+    assert new_page_get.status_code == 404
+def test_edit():
+    page_data = {
+        "title": "Title",
+        "options": "{}",
+        "data": "| Hello"
+    }
+    new_page = requests.put('http://localhost:8080/pages/page_to_be_edited', json=page_data)
+    assert new_page.json()['status'] == 1
+    new_page_get = requests.get('http://localhost:8080/pages/page_to_be_edited')
+    assert new_page_get.status_code == 200
+    assert new_page_get.text == "Hello"
+    page_data = {
+        "title": "Title",
+        "options": "{}",
+        "data": "| Goodbye"
+    }
+    new_page = requests.post('http://localhost:8080/pages/page_to_be_edited', json=page_data)
+    assert new_page.json()['status'] == 1
+    new_page_get = requests.get('http://localhost:8080/pages/page_to_be_edited')
+    assert new_page_get.status_code == 200
+    assert new_page_get.text == "Goodbye"
+
 # def test_zwait():
 #     time.sleep(200)
 @pytest.mark.edge
