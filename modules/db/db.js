@@ -1,12 +1,16 @@
 var sqlite3 = require( 'sqlite3' ).verbose();
 var q = require( 'q' );
+var path = require( 'path' );
 var squel = require( 'squel' );
 
 
 module.exports = function( core, callback ) {
 
 	var db = {
-		db: new sqlite3.Database( core.config.db.filename, callback )
+		db: new sqlite3.Database(
+			path.resolve( core.config.db.filename ),
+			callback
+		)
 	};
 
 	db.close = function() {
@@ -76,7 +80,7 @@ module.exports = function( core, callback ) {
 		for ( var key in wheres ) {
 
 			var q = key.split( ' ' )[ 0 ];
-			query.where( key + '$' + q );
+			query.where( key + ' $' + q );
 			params[ '$' + q ] = wheres[ key ];
 
 		}
@@ -99,6 +103,8 @@ module.exports = function( core, callback ) {
 			query.offset( +offset );
 
 		}
+
+		// console.log( query.toString() );
 
 		if ( single ) {
 
@@ -188,8 +194,9 @@ module.exports = function( core, callback ) {
 			'data TEXT, ' +
 			'author INTEGER, ' +
 			'date DATETIME, ' +
-			'options TEXT,' +
-			'admin INTEGER,' +
+			'options TEXT, ' +
+			'admin INTEGER, ' +
+			'template VARCHAR(100), ' +
 			'cache INTEGER' +
 			');';
 		var users = 'CREATE TABLE users (' +
@@ -201,7 +208,21 @@ module.exports = function( core, callback ) {
 			'date DATETIME, ' +
 			'options TEXT' +
 			');';
-		q.all( [ db._Run( pages, {} ), db._Run( users, {} ) ] ).then( function() {
+		var settings = 'CREATE TABLE settings (' +
+			'id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
+			'name VARCHAR(100) UNIQUE , ' +
+			'option TEXT, ' +
+			'level INTEGER, ' +
+			'date DATETIME' + 
+			');';
+		
+		q.all(
+			[
+				db._Run( pages, {} ),
+				db._Run( users, {} ),
+				db._Run( settings, {} )
+			]
+		).then( function() {
 
 			console.log( 'Creates successful' );
 			deffered.resolve();
@@ -232,6 +253,7 @@ module.exports = function( core, callback ) {
 			date: ( new Date() ).getTime(),
 			options: '{}',
 			admin: 0,
+			template: 'blank',
 			cache: 1
 		}
 
@@ -244,6 +266,43 @@ module.exports = function( core, callback ) {
 		// console.log( defaultData );
 		return db.insert( 'pages', defaultData );
 
+	};
+	
+	db.insertSetting = function( data ) {
+
+		var defaultData = {
+			name: 'key',
+			option: 'value',
+			date: ( new Date() ).getTime(),
+			level: 0
+		};
+		
+		for ( var i in data ) {
+
+			defaultData[ i ] = data[ i ]
+
+		}
+		
+		return db.insert( 'settings', defaultData );
+
+	};
+	
+	db.defineSetting = function( key, value ) {
+		
+		db.get(
+			'settings',
+			[ '*' ], 
+			{
+				name: key,
+				option: value
+			},
+			null,
+			1
+		).then( function( data ) {
+			if( !data ) {
+				db.insertSetting( {name: key, option: value} );
+			}
+		} );
 	};
 
 	db.deletePage = function( page ) {
@@ -264,7 +323,13 @@ module.exports = function( core, callback ) {
 	db.verify = function() {
 
 		var deffered = q.defer();
-		q.all( [ db._Get( 'SELECT * from pages', {} ), db._Get( 'SELECT * from users', {} ) ] ).then( function() {
+		q.all(
+			[
+				db._Get( 'SELECT * from pages', {} ),
+				db._Get( 'SELECT * from users', {} ),
+				db._Get( 'SELECT * from settings', {} )
+			]
+		).then( function() {
 
 			console.log( 'Tables are set' );
 
@@ -284,7 +349,7 @@ module.exports = function( core, callback ) {
 			deffered.reject( err );
 
 		} );
-		// db.insertPage({$title:'hello',$data:'Faggot ' + Math.random()}).then(function(){
+		// db.insertPage({$title:'hello',$data:'asdf ' + Math.random()}).then(function(){
 		// 	return db._All('SELECT * FROM pages WHERE id = $id ORDER BY id DESC LIMIT 20',{$id:325});
 		// }).then(function(rows){
 		// 	console.log(rows);

@@ -1,0 +1,31 @@
+script.
+  $(document).ready( function (){
+       dynamicForm('#template', function( e, data ) {
+           e.preventDefault();
+           console.log(data);
+           $.ajax({
+              type: 'PUT',
+              url: '/template/' + data.title,
+              data: data,
+              success: function(data){
+                  if(data.status){
+                      alert('Template Created!');
+                  } else {
+                      alert(data);
+                  }
+              },
+              error: function(err){
+                  console.log(err);
+              }
+          });
+       });
+  });
+h1 New Template
+form#template(method="PUT")
+  .form-group
+    h3 Title
+    input.form-control(type='text' name='title')
+    h3 Content
+    textarea.form-control(name='data' rows='15')
+    input.btn.btn-primary(type='submit')
+

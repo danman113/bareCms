@@ -1,17 +1,55 @@
-module.exports = function() {
+var path = require( 'path' );
+var fs = require( 'fs' );
 
+
+module.exports = function( args ) {
+
+	// Default config, with most major parts being relative to main folder structure
 	var defaultConfig = {
+		core: {
+			pluginFolder: path.resolve( path.dirname( require.main.filename ), './plugins/' )
+		}, 
 		db: {
-			filename: "./database.sql"
+			filename: path.resolve( path.dirname( require.main.filename ), './database.sql' )
 		},
 		router: {
 			port: 8080,
-			staticURL: './static/'
+			staticURL: path.resolve( path.dirname( require.main.filename ), './static/' )
 		},
 		theme: {
-			folter: './themes/'
+			folder: path.resolve( path.dirname( require.main.filename ), './themes/' ),
+			theme: 'default'
 		}
 	};
+
+	// Recursively parses config, appending to default config.
+	function parseArgs( argv, opt ){
+		for( var i in argv ) {
+			if( typeof argv[ i ] != 'object' ){
+				opt[ i ] = argv[ i ];
+			} else {
+				opt[ i ] = opt[ i ]?opt[ i ]:{}; 
+				parseArgs( argv[ i ], opt[ i ] );
+			}
+		}
+		return opt;
+	}
+
+	// Parses additional config file
+	if( args.config ) {
+		try {
+			var config = JSON.parse( fs.readFileSync( args.config, 'utf8' ) );
+			console
+			parseArgs( config, defaultConfig );
+		} catch( e ) {
+			console.log( 'Could not parse config file!' );
+			console.log( 'Error: ', e );
+		}
+	}
+
+	parseArgs( args, defaultConfig );
+
+	
 
 	return defaultConfig;
 

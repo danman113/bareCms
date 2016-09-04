@@ -8,24 +8,34 @@ module.exports = function() {
 		config: null,
 		router: null,
 		theme: null,
+		plugins: [],
 	};
 
 	coreExport.setDb = function( db ) {
 
+		var _this = this;
 		var deffered = q.defer();
 		this.db = db( this, function( err ) {
 
 			if ( err ) deffered.reject( err );
-			else deffered.resolve();
+			else {
+
+				_this.db.verify().then( function() {
+					deffered.resolve();
+				}, function( err ) {
+					deffered.reject( err );
+				} )
+
+			}
 
 		} );
 		return deffered.promise;
 
 	};
-	coreExport.setConfig = function( config ) {
+	coreExport.setConfig = function( config, args ) {
 
 		var deffered = q.defer();
-		this.config = config();
+		this.config = config( args );
 		return deffered.promise;
 
 	};
@@ -57,6 +67,19 @@ module.exports = function() {
 			else deffered.resolve();
 
 		} );
+		return deffered.promise;
+
+	};
+
+	coreExport.setPlugins = function() {
+
+		var deffered = q.defer();
+
+		this.plugins = require( '../config/plugin.js' )( coreExport ,function( err ) {
+			if( err ) deffered.reject( err );
+			else deffered.resolve();
+		} );
+
 		return deffered.promise;
 
 	};
