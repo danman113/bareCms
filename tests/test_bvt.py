@@ -233,7 +233,8 @@ def test_settings():
 def test_login( username="newUser", password="wordpass123" ):
     data = {
         "username": username,
-        "password": password
+        "password": password,
+        "password2": password,
     }
     new_user = s.post('http://localhost:8080/register/', json=data)
     assert new_user.status_code == 201

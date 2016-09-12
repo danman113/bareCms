@@ -261,7 +261,7 @@ module.exports = function( core, callback ) {
 
 		router.setRedirect( req, req._parsedUrl.pathname );
 		router.setToast( req, "You must log in to view that page!" )
-		res.redirect( 301, '/login' );
+		res.redirect( 307, '/login' );
 
 	};
 
@@ -951,7 +951,7 @@ function init( app, router, core, site ) {
 	
 			var re = router.getRedirect( req );
 			if( re )
-				res.redirect( 301, re );
+				res.redirect( 307, re );
 	
 			router.sendStaticPage(
 				req,
