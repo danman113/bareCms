@@ -201,7 +201,7 @@ module.exports = function( core, callback ) {
 			');';
 		var users = 'CREATE TABLE users (' +
 			'id INTEGER PRIMARY KEY AUTOINCREMENT, ' +
-			'username VARCHAR(100), ' +
+			'username VARCHAR(100) UNIQUE, ' +
 			'info TEXT, ' +
 			'password VARCHAR(100), ' +
 			'level INTEGER, ' +
@@ -289,20 +289,36 @@ module.exports = function( core, callback ) {
 	
 	db.defineSetting = function( key, value ) {
 		
-		db.get(
+		return db.get(
 			'settings',
 			[ '*' ], 
 			{
-				name: key,
-				option: value
+				"name == ": key
 			},
 			null,
 			1
 		).then( function( data ) {
 			if( !data ) {
-				db.insertSetting( {name: key, option: value} );
+				console.log( 'Inserted setting: ' + key );
+				return db.insertSetting( {name: key, option: value} );
 			}
+			console.log( 'Setting up to date: ' + key );
+		}, function( err ) {
+			console.log( 'Error getting settings', err );
 		} );
+	};
+
+	db.updateSetting = function( key, value ) {
+		return db.update(
+			'settings',
+			{
+				"name == ": key
+			},
+			{
+				name: key,
+				option: value
+			}
+		);
 	};
 
 	db.deletePage = function( page ) {
@@ -318,6 +334,86 @@ module.exports = function( core, callback ) {
 			{'url == ': page, 'admin == ':0 },
 			data
 		)
+	};
+	
+	db.getSettings = function() {
+
+		return db.get( 'settings', [ '*' ], {}, {name: true} );
+
+	};
+
+	db.addUser = function( data ) {
+
+		var deffered = q.defer();
+		var defaultData = {
+			username: 'newUser',
+			info: 'A happy user!',
+			date: ( new Date() ).getTime(),
+			options: '{}',
+			level: 1
+		}
+
+		for ( var i in data ) {
+
+			defaultData[ i ] = data[ i ]
+
+		}
+		
+		if( !defaultData.password ) {
+			setTimeout( function() {
+				deffered.reject( new Error('Password not entered!') );
+			}, 10 );
+			return deffered.promise;
+		} else if( !db.hash.valid( defaultData.username, defaultData.password ) ) {
+			setTimeout( function() {
+				deffered.reject( new Error('Password not valid!') );
+			}, 10 );
+			return deffered.promise;
+		}
+		
+		return db.hash.generate( defaultData.password ).then( function( hash ) {
+			defaultData.password = hash;
+			return db.insert( 'users', defaultData );
+		}, function() {
+			throw new Error( 'Password cannot be hashed' );
+		} );
+
+		// console.log( defaultData );
+		
+	};
+
+	db.resetPassword = function( user, newPass ) {
+		return db.hash.generate( newPass ).then( function( hash ) {
+			return db.update( 'users', { "username == ": newPass }, { password: hash } );
+		}, function() {
+			throw new Error( 'Password cannot be hashed' );
+		} );
+	};
+	
+	db.getUser = function( user ) {
+		return db.get(
+			'users',
+			[ '*' ],
+			{
+				"username == ": user
+			},
+			{},
+			1
+		);
+	};
+	
+	db.removeUser = function( user ) {
+		return db.delete( 'users', { "username == ": user } );
+	};
+	
+	db.login = function( user, plaintextPass ) {
+		return db.getUser( user ).then( function( user ) {
+			if( user )
+				return db.hash.check( plaintextPass, user.password );
+			else
+				throw new Error( 'User not found!');
+			
+		} );
 	};
 
 	db.verify = function() {
@@ -341,6 +437,15 @@ module.exports = function( core, callback ) {
 
 		} ).then( function() {
 
+			core.db.defineSetting( 'navigation', '{}' );
+			core.db.defineSetting( 'sitename', 'My Website' );
+			console.log( core.config.db.passwordHash );
+			try { 
+				db.hash = require( core.config.db.passwordHash );
+			} catch ( e ) {
+				console.log( 'Hash function not found!', e );
+			}
+
 			deffered.resolve();
 
 		}, function( err ) {
@@ -349,11 +454,7 @@ module.exports = function( core, callback ) {
 			deffered.reject( err );
 
 		} );
-		// db.insertPage({$title:'hello',$data:'asdf ' + Math.random()}).then(function(){
-		// 	return db._All('SELECT * FROM pages WHERE id = $id ORDER BY id DESC LIMIT 20',{$id:325});
-		// }).then(function(rows){
-		// 	console.log(rows);
-		// });
+
 		return deffered.promise;
 
 	};

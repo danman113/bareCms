@@ -1,0 +1,36 @@
+script.
+  $(document).ready( function (){
+       dynamicForm('#login', function( e, data){
+           e.preventDefault();
+           console.log(data);
+           $.ajax({
+              type: 'POST',
+              data: data,
+              success: function(data){
+                  if(data.status){
+                      alert('You\'re logged in!');
+                      window.location = '/admin';
+                  } else {
+                      alert(data);
+                  }
+              },
+              error: function(err){
+                  alert(err.responseJSON.error);
+              }
+          });
+       });
+  });
+
+.toastContainer
+  each val in toasts
+    .alert.alert-danger= val
+    
+
+form#login(method="POST")
+  .form-group
+    h3 Username
+    input.form-control(type='text' name='username')
+    h3 Password
+    input.form-control(type='password' name='password')
+    br
+    input.btn.btn-primary.form-control(type='submit')

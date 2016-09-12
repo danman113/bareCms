@@ -10,11 +10,18 @@ module.exports = function( args ) {
 			pluginFolder: path.resolve( path.dirname( require.main.filename ), './plugins/' )
 		}, 
 		db: {
-			filename: path.resolve( path.dirname( require.main.filename ), './database.sql' )
+			filename: path.resolve( path.dirname( require.main.filename ), './database.sql' ),
+			passwordHash: path.resolve( path.dirname( require.main.filename ), './modules/db/passwordHash.js' )
 		},
 		router: {
 			port: 8080,
-			staticURL: path.resolve( path.dirname( require.main.filename ), './static/' )
+			staticURL: path.resolve( path.dirname( require.main.filename ), './static/' ),
+			sessionSecret: (Math.random()*(new Date()).getTime()).toString(16), 
+			sessionName:  (Math.random()*(new Date()).getTime()*2).toString(16),
+			sessionAge: 600000,
+			sessionSecure: false,
+			loginAttempts: 6,
+			loginTimeout: 1000 * 60 * 5
 		},
 		theme: {
 			folder: path.resolve( path.dirname( require.main.filename ), './themes/' ),

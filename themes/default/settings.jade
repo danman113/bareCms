@@ -1,0 +1,50 @@
+script.
+  $(document).ready(getInput);
+  
+  var changed = {};
+  
+  function getInput(){
+    $("#settings input[type='text']").each( function( i, elem ) {
+      $(elem).on("input", function() {
+        $(this).parent().addClass('has-error');
+        changed[this.id] = this.value;
+      } );
+    } );
+    $('#settings').submit( function(e) {
+      e.preventDefault();
+      $.ajax( {
+        type: 'POST',
+        url: '/settings/',
+        data: changed,
+        success: function(data){
+            if(data.status){
+                alert('Settings Changed!');
+                $( '.has-error' ).each( function ( i, elem ) {
+                  $(elem).removeClass( 'has-error' );
+                  $(elem).addClass( 'has-success' );
+                } );
+            } else {
+                alert(data);
+            }
+        },
+        error: function(err){
+            console.log(err);
+        }
+      } );
+    } );
+  }
+h1 Settings
+form#settings
+  table.table.table-striped
+    thead
+      tr
+        th Name
+        th Value
+    tbody
+      each setting in settings
+        tr
+          th
+            b= setting.name
+          th.form-group
+            input.form-control(type='text' id='#{setting.name}' value='#{setting.option}' ) 
+  input.btn.btn-primary(type='submit' value='Update')

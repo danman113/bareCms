@@ -16,7 +16,8 @@ module.exports = function( core, callback ) {
 
 	theme.addAdminPageFromFile = function( url, filepath, template, name ) {
 
-		filepath = path.resolve( core.config.theme.folder, filepath )
+		var deffered = q.defer();
+		filepath = path.resolve( core.config.theme.folder, core.config.theme.theme, filepath );
 		name = name ? name : url.substr( 1 );
 		template = template? template : 'blank';
 
@@ -43,6 +44,7 @@ module.exports = function( core, callback ) {
 					if ( page.data == html ) {
 
 						console.log( 'Theme up to date.' );
+						deffered.resolve();
 
 					} else {
 
@@ -53,6 +55,7 @@ module.exports = function( core, callback ) {
 						).then( function() {
 
 							console.log( 'Updated theme!' );
+							deffered.resolve();
 
 						} );
 
@@ -61,6 +64,7 @@ module.exports = function( core, callback ) {
 				} else {
 
 					console.log( 'Invalid read. Not updating.' );
+					deffered.reject();
 
 				}
 
@@ -78,10 +82,12 @@ module.exports = function( core, callback ) {
 				} ).then( function() {
 
 					console.log( 'Inserted ' + url );
+					deffered.resolve();
 
 				}, function( e ) {
 
 					console.log( 'Failed to insert to ' + url, e );
+					deffered.reject( e );
 
 				} );
 
@@ -90,14 +96,17 @@ module.exports = function( core, callback ) {
 		}, function( err ) {
 
 			console.log( 'Error searching for theme page: ', err );
+			deffered.reject();
 
 		} );
+
+		return deffered.promise;
 
 	};
 
 	theme.addFieldFromFile = function( field, filepath ) {
 
-		filepath = path.resolve( core.config.theme.folder, filepath )
+		filepath = path.resolve( core.config.theme.folder, core.config.theme.theme, filepath );
 		var html = "";
 		var valid = true;
 
@@ -137,12 +146,14 @@ module.exports = function( core, callback ) {
 					core.config.theme.theme,
 					'index.js'
 				)
-			)( core, theme );
+			)( core, theme, function() {
+				theme.initTemplates( function(){} );
+			} );
 		} catch( e ) {
 			console.log( 'Error setting theme!' );
 		}
 		
-		theme.initTemplates( function(){} );
+		
 	};
 	
 	theme.useTemplate = function( key, callback ) {
@@ -248,9 +259,11 @@ module.exports = function( core, callback ) {
 	};
 	
 	theme.setTemplate = function( key, filepath, admin ) {
+
 		// set in DB
+		var deffered = q.defer();
 		admin = admin !== undefined? admin : 1 ; 
-		filepath = path.resolve( core.config.theme.folder, filepath );
+		filepath = path.resolve( core.config.theme.folder, core.config.theme.theme, filepath );
 		core.db.getPage( { 'title == ': key, 'admin == ': admin } ).then( function( page ) {
 
 			var html = "";
@@ -274,6 +287,7 @@ module.exports = function( core, callback ) {
 					if ( page.data == html ) {
 
 						console.log( 'Template up to date.' );
+						deffered.resolve();
 
 					} else {
 
@@ -284,7 +298,10 @@ module.exports = function( core, callback ) {
 						).then( function() {
 
 							console.log( 'Updated template!' );
+							deffered.resolve();
 
+						}, function( err ) {
+							deffered.reject( err );
 						} );
 
 					}
@@ -292,6 +309,7 @@ module.exports = function( core, callback ) {
 				} else {
 
 					console.log( 'Invalid read. Not updating.' );
+					deffered.reject();
 
 				}
 
@@ -308,10 +326,12 @@ module.exports = function( core, callback ) {
 				} ).then( function() {
 
 					console.log( 'Inserted template: ' + key );
+					deffered.resolve();
 
 				}, function( e ) {
 
 					console.log( 'Failed to insert to ' + key, e );
+					deffered.reject( e );
 
 				} );
 
@@ -320,8 +340,11 @@ module.exports = function( core, callback ) {
 		}, function( err ) {
 
 			console.log( 'Error searching for theme page: ', err );
+			deffered.reject( err );
 
 		} );
+
+		return deffered.promise;
 
 	};
 	
@@ -365,9 +388,10 @@ module.exports = function( core, callback ) {
 		} );
 	};
 	
-	theme.setTemplateFromString( 'blank', '!{pageData}' );
-	theme.initTheme();
-	callback();
+	theme.setTemplateFromString( 'blank', '!{pageData}', function() {
+		theme.initTheme();
+		callback();
+	} );
 	return theme;
 
 };

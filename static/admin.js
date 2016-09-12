@@ -47,7 +47,7 @@ function dataAjax( method , success, error ){
 
 function dynamicForm( formSelector, submit){
     var formData = {};
-    $(formSelector).find('input[type="text"],input[type="checkbox"], input[type="range"], textarea, select').each( function( i, elem ){
+    $(formSelector).find('input[type="text"], input[type="checkbox"], input[type="range"], input[type="password"], textarea, select').each( function( i, elem ){
         console.log(arguments);
         elem = $(elem);
         formData[ elem.attr('name') ] = getElemData( elem );
