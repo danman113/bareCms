@@ -107,8 +107,7 @@ module.exports = function( core, callback ) {
 
 			res.send( html );
 
-		} );
-		
+		} );		
 
 	};
 
@@ -291,6 +290,9 @@ module.exports = function( core, callback ) {
 	router.setLogin = function( req, data ) {
 
 		var user = { username: data.username };
+
+		router.setToast( req,  'Registration is currently open, you should consider closing it for security reasons.' )
+
 		req.session.login = user;
 
 	};
@@ -578,12 +580,23 @@ function init( app, router, core, site ) {
 	
 			} );
 		} );
+
+		app.use( '/login', function( req, res, next ) {
+			res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+			next();
+		} )
 		
 		app.get( '/login', function( req, res, next ) {
 
 			var attempts = router.loginRequests[ router.getClientAddress( req ) ];
 
 			var toasts = router.getToasts( req );
+
+			if( req.session.login ) {
+				router.setToast( req, "You are already logged in!" )
+				res.redirect( 307, '/admin' );
+				return false;
+			}
 
 			router.sendStaticPage(
 				req,
@@ -636,10 +649,22 @@ function init( app, router, core, site ) {
 			} );
 		} )
 
+		app.use( '/register', function( req, res, next ) {
+			res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+			next();
+		} )
+
 		app.post( '/register', function( req, res, next ) {
 
 			var error = { status: 0, error: "Username/Password combination does not exist." };
+
+			if( !core.config.router.openRegistration ) {
 			
+				error.error = "Registration not open!";
+				res.send( error );
+			
+			}
+
 			var username = req.body.username;
 			
 			var password = req.body.password;
@@ -674,6 +699,9 @@ function init( app, router, core, site ) {
 		} );
 
 		app.get( '/register', function( req, res, next ) {
+
+			if( !core.config.router.openRegistration && !router.requireLogin( req, res, next ))
+				return false;
 
 			router.sendStaticPage(
 				req,
@@ -941,6 +969,8 @@ function init( app, router, core, site ) {
 		} );
 		
 		app.use( '/admin/*', function( req, res, next ) {
+
+			res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
 
 			if( router.requireLogin( req, res, next ) )
 				next();

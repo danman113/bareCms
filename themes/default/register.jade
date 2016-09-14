@@ -11,7 +11,7 @@ script.
                       alert('Account created!');
                       window.location = '/login';
                   } else {
-                      alert(data);
+                      alert(data.error);
                   }
               },
               error: function(err){
