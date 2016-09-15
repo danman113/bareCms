@@ -18,7 +18,7 @@ module.exports = function( core, callback ) {
 		var deffered = q.defer();
 		db.db.close( function( err ) {
 
-			if( err ) deffered.reject( err );
+			if ( err ) deffered.reject( err );
 			else deffered.resolve();
 
 		} );
@@ -31,7 +31,7 @@ module.exports = function( core, callback ) {
 		var deffered = q.defer();
 		db.db.all( query, params, function( err, row ) {
 
-			if( err ) deffered.reject( err );
+			if ( err ) deffered.reject( err );
 			else deffered.resolve( row );
 
 		} );
@@ -44,7 +44,7 @@ module.exports = function( core, callback ) {
 		var deffered = q.defer();
 		db.db.get( query, params, function( err, row ) {
 
-			if( err ) deffered.reject( err );
+			if ( err ) deffered.reject( err );
 			else deffered.resolve( row );
 
 		} );
@@ -72,7 +72,7 @@ module.exports = function( core, callback ) {
 		orders = orders ? orders : {};
 		var single = false;
 
-		for ( var i = 0; i < selects.length; i++ ) {
+		for ( var i = 0; i < selects.length; i ++ ) {
 
 			query.field( selects[ i ] );
 
@@ -91,16 +91,16 @@ module.exports = function( core, callback ) {
 
 		}
 
-		if ( !isNaN( +limit ) ) {
+		if ( ! isNaN( + limit ) ) {
 
-			if ( +limit == 1 ) single = true;
-			else query.limit( +limit );
+			if ( + limit == 1 ) single = true;
+			else query.limit( + limit );
 
 		}
 
-		if ( !isNaN( +offset ) ) {
+		if ( ! isNaN( + offset ) ) {
 
-			query.offset( +offset );
+			query.offset( + offset );
 
 		}
 
@@ -213,9 +213,9 @@ module.exports = function( core, callback ) {
 			'name VARCHAR(100) UNIQUE , ' +
 			'option TEXT, ' +
 			'level INTEGER, ' +
-			'date DATETIME' + 
+			'date DATETIME' +
 			');';
-		
+
 		q.all(
 			[
 				db._Run( pages, {} ),
@@ -267,7 +267,7 @@ module.exports = function( core, callback ) {
 		return db.insert( 'pages', defaultData );
 
 	};
-	
+
 	db.insertSetting = function( data ) {
 
 		var defaultData = {
@@ -276,39 +276,47 @@ module.exports = function( core, callback ) {
 			date: ( new Date() ).getTime(),
 			level: 0
 		};
-		
+
 		for ( var i in data ) {
 
 			defaultData[ i ] = data[ i ]
 
 		}
-		
+
 		return db.insert( 'settings', defaultData );
 
 	};
-	
+
 	db.defineSetting = function( key, value ) {
-		
+
 		return db.get(
 			'settings',
-			[ '*' ], 
+			[ '*' ],
 			{
 				"name == ": key
 			},
 			null,
 			1
 		).then( function( data ) {
-			if( !data ) {
+
+			if ( ! data ) {
+
 				console.log( 'Inserted setting: ' + key );
-				return db.insertSetting( {name: key, option: value} );
+				return db.insertSetting( { name: key, option: value } );
+
 			}
 			console.log( 'Setting up to date: ' + key );
+
 		}, function( err ) {
+
 			console.log( 'Error getting settings', err );
+
 		} );
+
 	};
 
 	db.updateSetting = function( key, value ) {
+
 		return db.update(
 			'settings',
 			{
@@ -319,26 +327,31 @@ module.exports = function( core, callback ) {
 				option: value
 			}
 		);
+
 	};
 
 	db.deletePage = function( page ) {
+
 		return db.delete(
 			'pages',
-			{ 'url == ': page, 'admin == ': 0 } 
+			{ 'url == ': page, 'admin == ': 0 }
 		)
+
 	};
-	
-	db.updatePage = function( page, data ){
+
+	db.updatePage = function( page, data ) {
+
 		return db.update(
-			'pages', 
-			{'url == ': page, 'admin == ':0 },
+			'pages',
+			{ 'url == ': page, 'admin == ': 0 },
 			data
 		)
+
 	};
-	
+
 	db.getSettings = function() {
 
-		return db.get( 'settings', [ '*' ], {}, {name: true} );
+		return db.get( 'settings', [ '*' ], {}, { name: true } );
 
 	};
 
@@ -358,39 +371,58 @@ module.exports = function( core, callback ) {
 			defaultData[ i ] = data[ i ]
 
 		}
-		
-		if( !defaultData.password ) {
+
+		if ( ! defaultData.password ) {
+
 			setTimeout( function() {
-				deffered.reject( new Error('Password not entered!') );
+
+				deffered.reject( new Error( 'Password not entered!' ) );
+
 			}, 10 );
 			return deffered.promise;
-		} else if( !db.hash.valid( defaultData.username, defaultData.password ) ) {
+
+		} else if ( ! db.hash.valid( defaultData.username, defaultData.password ) ) {
+
 			setTimeout( function() {
-				deffered.reject( new Error('Password not valid!') );
+
+				deffered.reject( new Error( 'Password not valid!' ) );
+
 			}, 10 );
 			return deffered.promise;
+
 		}
-		
+
 		return db.hash.generate( defaultData.password ).then( function( hash ) {
+
 			defaultData.password = hash;
 			return db.insert( 'users', defaultData );
+
 		}, function() {
+
 			throw new Error( 'Password cannot be hashed' );
+
 		} );
 
 		// console.log( defaultData );
-		
+
 	};
 
 	db.resetPassword = function( user, newPass ) {
+
 		return db.hash.generate( newPass ).then( function( hash ) {
+
 			return db.update( 'users', { "username == ": newPass }, { password: hash } );
+
 		}, function() {
+
 			throw new Error( 'Password cannot be hashed' );
+
 		} );
+
 	};
-	
+
 	db.getUser = function( user ) {
+
 		return db.get(
 			'users',
 			[ '*' ],
@@ -400,20 +432,26 @@ module.exports = function( core, callback ) {
 			{},
 			1
 		);
+
 	};
-	
+
 	db.removeUser = function( user ) {
+
 		return db.delete( 'users', { "username == ": user } );
+
 	};
-	
+
 	db.login = function( user, plaintextPass ) {
+
 		return db.getUser( user ).then( function( user ) {
-			if( user )
+
+			if ( user )
 				return db.hash.check( plaintextPass, user.password );
 			else
-				throw new Error( 'User not found!');
-			
+				throw new Error( 'User not found!' );
+
 		} );
+
 	};
 
 	db.verify = function() {
@@ -440,10 +478,14 @@ module.exports = function( core, callback ) {
 			core.db.defineSetting( 'navigation', '{}' );
 			core.db.defineSetting( 'sitename', 'My Website' );
 			console.log( core.config.db.passwordHash );
-			try { 
+			try {
+
 				db.hash = require( core.config.db.passwordHash );
+
 			} catch ( e ) {
+
 				console.log( 'Hash function not found!', e );
+
 			}
 
 			deffered.resolve();

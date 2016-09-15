@@ -21,9 +21,13 @@ module.exports = function() {
 			else {
 
 				_this.db.verify().then( function() {
+
 					deffered.resolve();
+
 				}, function( err ) {
+
 					deffered.reject( err );
+
 				} )
 
 			}
@@ -75,9 +79,11 @@ module.exports = function() {
 
 		var deffered = q.defer();
 
-		this.plugins = require( '../config/plugin.js' )( coreExport ,function( err ) {
-			if( err ) deffered.reject( err );
+		this.plugins = require( '../config/plugin.js' )( coreExport, function( err ) {
+
+			if ( err ) deffered.reject( err );
 			else deffered.resolve();
+
 		} );
 
 		return deffered.promise;

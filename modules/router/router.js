@@ -13,7 +13,7 @@ module.exports = function( core, callback ) {
 	var router = {
 		app: app,
 		cache: {},
-		settingsCache:{},
+		settingsCache: {},
 		loginRequests: {},
 		filters: []
 	};
@@ -23,6 +23,13 @@ module.exports = function( core, callback ) {
 		general: {}
 	};
 
+	/**
+	 * Use the cache to send a cached page. 
+	 * @param  {Object} req       Req object to get url info
+	 * @param  {Object} res       Res object to send cached data
+	 * @param  {Object} extraData Extra data to add to the template
+	 * @param  {Boolean} params   Do the params change which page will be used?
+	 */
 	router.cacheUse = function( req, res, extraData, params ) {
 
 		var params;
@@ -31,7 +38,7 @@ module.exports = function( core, callback ) {
 		else
 			path = req._parsedUrl.pathname;
 		extraData = extraData ? extraData : {};
-		
+
 		if ( router.cache[ path ] ) {
 
 			if ( typeof router.cache[ path ] == 'function' ) {
@@ -61,6 +68,14 @@ module.exports = function( core, callback ) {
 
 	};
 
+	/**
+	 * Set the cache for a specific page.
+	 * @param  {Object}   req    Req Object
+	 * @param  {Object}   res    Res Object
+	 * @param  {Function} fn     Template function
+	 * @param  {Object}   data   Data to pass to template function
+	 * @param  {Boolean}  params Does the url use params?
+	 */
 	router.cacheSet = function( req, res, fn, data, params ) {
 
 		fn.data = data;
@@ -73,10 +88,17 @@ module.exports = function( core, callback ) {
 
 	};
 
+	/**
+	 * Sends the desired template.
+	 * @param  {Object}   req  Req object
+	 * @param  {Object}   res  Res object
+	 * @param  {Function} fn   Template function
+	 * @param  {Object}   data Data to be passed into template.
+	 */
 	router.sendPage = function( req, res, fn, data ) {
 
 		res.status( 200 );
-		
+
 		var str = "";
 		try {
 
@@ -90,8 +112,9 @@ module.exports = function( core, callback ) {
 
 		var template = data.template;
 		data.pageData = str;
-		
+
 		core.theme.useTemplate( template, function( templatefn ) {
+
 			var html = "";
 			try {
 
@@ -107,7 +130,7 @@ module.exports = function( core, callback ) {
 
 			res.send( html );
 
-		} );		
+		} );
 
 	};
 
@@ -129,6 +152,15 @@ module.exports = function( core, callback ) {
 
 	};
 
+	/**
+	 * Sends a static page from a template, using the cache as necessary.
+	 * @param  {Object}   req     Req object
+	 * @param  {Object}   res     Res object
+	 * @param  {Function} next    Next function
+	 * @param  {Object}   selects Selects to find the specific page
+	 * @param  {Object}   data    Data to feed into the template
+	 * @param  {Boolean}  params  Does the url use params
+	 */
 	router.sendStaticPage = function( req, res, next, selects, data, params ) {
 
 		// Check Cache first
@@ -152,7 +184,7 @@ module.exports = function( core, callback ) {
 				var fn;
 				try {
 
-					fn = jade.compile( page.data );
+					fn = core.theme.compile( page.data );
 
 				} catch ( e ) {
 
@@ -184,26 +216,27 @@ module.exports = function( core, callback ) {
 						str = e.toString();
 
 					}
-					
+
 					page.pageData = str;
-					
+
 					core.theme.useTemplate( template, function( templatefn ) {
+
 						var html = "";
 						try {
-	
+
 							html = templatefn( page );
-	
+
 						} catch ( e ) {
-	
+
 							html = e.toString();
-	
+
 						}
-						
-						router.cacheSet( req, res, html , params );
+
+						router.cacheSet( req, res, html, params );
 						router.cacheUse( req, res, null, params );
 
 					} );
-					
+
 
 				} else {
 
@@ -225,22 +258,40 @@ module.exports = function( core, callback ) {
 
 	};
 
+	/**
+	 * Loads the settings db to memory]
+	 */
 	router.getSettings = function() {
+
 		core.db.getSettings().then( function( data ) {
-			for( var i = 0; i < data.length; i++ ) {
+
+			for ( var i = 0; i < data.length; i ++ ) {
+
 				try {
-					router.settingsCache[ data[i].name ] = JSON.parse( data[i].option );
-				} catch( e ) {
-					router.settingsCache[ data[i].name ] = data[i].option;
+
+					router.settingsCache[ data[ i ].name ] = JSON.parse( data[ i ].option );
+
+				} catch ( e ) {
+
+					router.settingsCache[ data[ i ].name ] = data[ i ].option;
+
 				}
+
 			}
 			console.log( 'Set Settings' );
 			site.general.settings = router.settingsCache;
+
 		}, function( err ) {
+
 			console.log( 'Error setting settings! ', err );
+
 		} );
+
 	};
 
+	/**
+	 * Empties various caches
+	 */
 	router.emptyCache = function() {
 
 		router.cache = {};
@@ -249,13 +300,22 @@ module.exports = function( core, callback ) {
 
 	};
 
+	/**
+	 * Starts the routes and inits the app.
+	 */
 	router.start = function() {
 
 		router.initApp( app );
 		app.listen( core.config.router.port );
 
 	};
-	
+
+	/**
+	 * Function that gets called on all redirects
+	 * @param  {Object}   req  Req object
+	 * @param  {Object}   res  Res object
+	 * @param  {Function} next Next function
+	 */
 	router.redirectLogin = function( req, res, next ) {
 
 		router.setRedirect( req, req._parsedUrl.pathname );
@@ -264,92 +324,168 @@ module.exports = function( core, callback ) {
 
 	};
 
+	/**
+	 * Function that redirects if user is not logged in
+	 * @param  {Object}   req  Req object
+	 * @param  {Object}   res  Res object
+	 * @param  {Function} next Next function
+	 * @return {Boolean}       True if user is logged in.
+	 */
 	router.requireLogin = function( req, res, next ) {
 
-		if( req.session.login ) {
+		if ( req.session.login ) {
+
 			return true;
+
 		} else {
+
 			router.redirectLogin( req, res, next );
 			return false;
+
 		}
 
 	};
-	
+
+	/**
+	 * Sets redirect of session. 
+	 * @param {Object} req Req object to append to session
+	 * @param {String} url URL to redirect user to.
+	 */
 	router.setRedirect = function( req, url ) {
+
 		req.session.redirect = url;
-	}
-	
+
+	};
+
+	/**
+	 * Gets the redirect and deletes it from the user session.
+	 * @param  {Object} req Req Object
+	 * @return {String}     Redirect URL
+	 */
 	router.getRedirect = function( req ) {
+
 		var redirect = req.session.redirect;
-		
+
 		delete req.session.redirect;
-		
+
 		return redirect;
-	}
-	
+
+	};
+
+	/**
+	 * Sets the login using the session
+	 * @param {Object} req  Req object
+	 * @param {Object} data User data
+	 */
 	router.setLogin = function( req, data ) {
 
 		var user = { username: data.username };
 
-		router.setToast( req,  'Registration is currently open, you should consider closing it for security reasons.' )
+		router.setToast( req, 'Registration is currently open, you should consider closing it for security reasons.' )
 
 		req.session.login = user;
 
 	};
-	
+
+	/**
+	 * Retrieves and deletes toasts
+	 * @param  {Object} req Req object
+	 * @return {Array}      Toast array
+	 */
 	router.getToasts = function( req ) {
-		if( req.session.toasts ) {
+
+		if ( req.session.toasts ) {
+
 			var toasts = req.session.toasts;
 			req.session.toasts = [];
 			return toasts;
+
 		} else {
+
 			return [];
+
 		}
+
 	};
-	
+
+	/**
+	 * Adds a toast
+	 * @param {Object} req   Req object
+	 * @param {String} toast Toast to add
+	 */
 	router.setToast = function( req, toast ) {
-		if( !req.session.toasts ) {
+
+		if ( ! req.session.toasts ) {
+
 			req.session.toasts = [ toast ];
+
 		} else {
+
 			req.session.toasts.push( toast );
+
 		}
 
 	};
 
-	router.getClientAddress = function ( req ) {
-		return ( req.headers[ 'x-forwarded-for' ] || '' ).split( ',' )[ 0 ] 
+	/**
+	 * Shortcut to get cleint address
+	 * @param  {Object} req Req object
+	 * @return {String}     Client IP address
+	 */
+	router.getClientAddress = function( req ) {
+
+		return ( req.headers[ 'x-forwarded-for' ] || '' ).split( ',' )[ 0 ]
 		|| req.connection.remoteAddress;
+
 	};
-	
+
+	/**
+	 * Limits the how many times someone can attempt to access a page.
+	 * @param  {Object}   req  Req object
+	 * @param  {Object}   res  Res object
+	 * @param  {Function} next Next function
+	 */
 	router.limitAttempts = function( req, res, next ) {
-		
+
 		var ip = router.getClientAddress( req );
 		if (
-				!(ip in router.loginRequests) || 
+				! ( ip in router.loginRequests ) ||
 				router.loginRequests[ ip ].lastAttempt + core.config.router.loginTimeout
-				< (new Date()).getTime()
+				< ( new Date() ).getTime()
 			)
 		{
-			router.loginRequests[ ip ] = { attempts: 1, lastAttempt: (new Date()).getTime() };
+
+			router.loginRequests[ ip ] = { attempts: 1, lastAttempt: ( new Date() ).getTime() };
 			return router.loginRequests[ ip ];
+
 		}
-		
+
 		var data = router.loginRequests[ ip ];
-		if( data.attempts >= core.config.router.loginAttempts ) {
+		if ( data.attempts >= core.config.router.loginAttempts ) {
+
 			return false;
+
 		} else {
-			data.attempts++;
-			data.lastAttempt = (new Date()).getTime();
+
+			data.attempts ++;
+			data.lastAttempt = ( new Date() ).getTime();
 			return data;
+
 		}
-		
+
 	};
 
-	router.initApp = function( app ){
+	/**
+	 * Inits the routes of the app.
+	 * @param  {Object} app App object to add routes too
+	 */
+	router.initApp = function( app ) {
+
 		init( app, router, core, site );
+
 	};
-	
-	
+
+
 	router.start( callback );
 
 	return router;
@@ -359,18 +495,18 @@ module.exports = function( core, callback ) {
 
 function init( app, router, core, site ) {
 
-		core.plugins.startPlugins( core, app );
-		
-		router.getSettings();
+	core.plugins.startPlugins( core, app );
 
-		app.use( bodyParser.json() );
+	router.getSettings();
 
-		app.use( bodyParser.urlencoded( {
+	app.use( bodyParser.json() );
+
+	app.use( bodyParser.urlencoded( {
 			extended: true
 		} ) );
-		
-		app.use(
-			session(
+
+	app.use(
+		session(
 				{
 					secret: core.config.router.sessionSecret,
 					name: core.config.router.sessionName,
@@ -384,502 +520,48 @@ function init( app, router, core, site ) {
 				}
 			)
 		);
-	
-		app.use(
-			'/static',
-			express.static(
-				path.resolve(
-					core.config.router.staticURL
-				)
+
+	app.use(
+		'/static',
+		express.static(
+			path.resolve(
+				core.config.router.staticURL
 			)
-		);
-	
-		app.get( '/pages', function( req, res, next ) {
+		)
+	);
 
-			var newPath = '/';
-			if( req.query.edit )
-				newPath += '?edit=1';
-			res.redirect( newPath );
-	
-		} );
-	
-		app.get( '/pages/*', function( req, res, next ) {
-	
-			var path = req._parsedUrl.pathname.substr( 6 );
-			var lastChar = path.substr( path.length - 1, path.length );
-			if ( lastChar == '/' && path != '/' ) path = path.substr( 0, path.length - 1 );
-			if ( req.query.edit == true ) {
-	
-				core.db.getPage( { "url == ": path, 'admin ==': 0 } ).then( function( pageData ) {
-	
-					router.sendStaticPage(
-						req,
-						res,
-						next,
-						{ "url == ": '/edit', 'admin ==': 1 },
-						{ site: site.general, admin: site.admin, editPage: pageData },
-						true
-					);
-	
-				}, function( err ) {
-	
-					res.status( 404 );
-					res.send( err );
-	
-				} );
-	
-			} else {
-	
+	app.use(
+		'/staticAdmin',
+		express.static(
+			path.resolve(
+				core.config.router.staticAdminURL
+			)
+		)
+	);
+
+	app.get( '/pages', function( req, res, next ) {
+
+		var newPath = '/';
+		if ( req.query.edit )
+			newPath += '?edit=1';
+		res.redirect( newPath );
+
+	} );
+
+	app.get( '/pages/*', function( req, res, next ) {
+
+		var path = req._parsedUrl.pathname.substr( 6 );
+		var lastChar = path.substr( path.length - 1, path.length );
+		if ( lastChar == '/' && path != '/' ) path = path.substr( 0, path.length - 1 );
+		if ( req.query.edit == true ) {
+
+			core.db.getPage( { "url == ": path, 'admin ==': 0 } ).then( function( pageData ) {
+
 				router.sendStaticPage(
 					req,
 					res,
 					next,
-					{ "url == ": path, 'admin ==': 0 },
-					{ site: site.general }
-				);
-	
-			}
-	
-		} );
-	
-		app.post( '/pages/*', function( req, res, next ) {
-	
-			if( !router.requireLogin( req, res, next ) )
-				return false
-			
-			router.emptyCache();
-			var path = req._parsedUrl.pathname.substr( 6 );
-			var lastChar = path.substr( path.length - 1, path.length );
-			if ( lastChar == '/' && path != '/' ) path = path.substr( 0, path.length - 1 );
-			var form = req.body;
-			form.cache = form.cache == 1;
-			form.date = ( new Date() ).getTime();
-			core.db.updatePage( path, form ).then( function( err ) {
-	
-				res.send( { status: 1, error: err, pageURL: path } );
-	
-			}, function( err ) {
-	
-				res.send( { status: 0, error: err } );
-	
-			} );
-	
-		} );
-		
-		app.put( '/pages/*', function( req, res, next ) {
-	
-			if( !router.requireLogin( req, res, next ) )
-				return false
-
-			var path = req._parsedUrl.pathname.substr( 6 );
-			var lastChar = path.substr( path.length - 1, path.length );
-			if ( lastChar == '/' && path != '/' ) path = path.substr( 0, path.length - 1 );
-	
-			var form = req.body;
-			form.url = path;
-			form.admin = 0;
-			form.cache = form.cache == 1;
-	
-			if ( ! form.data || ! form.title ) {
-	
-				res.status( 400 );
-				res.send( { status: 0, error: "Title and data field must be filled" } );
-				return false;
-	
-			}
-	
-			core.db.insertPage( form ).then( function() {
-	
-				res.status( 201 );
-				res.send( { status: 1 } );
-	
-			}, function( err ) {
-	
-				res.status( 400 );
-				res.send( { status: 0, error: err.message } );
-	
-			} );
-	
-		} );
-	
-		app.delete( '/pages/*', function( req, res, next ) {
-	
-			if( !router.requireLogin( req, res, next ) )
-				return false
-			
-			router.emptyCache();
-			var path = req._parsedUrl.pathname.substr( 6 );
-			var lastChar = path.substr( path.length - 1, path.length );
-			if ( lastChar == '/' && path != '/' ) path = path.substr( 0, path.length - 1 );
-	
-			core.db.deletePage( path ).then( function( err ) {
-	
-				res.status( 200 );
-				res.send( { status: 1, error: err } );
-	
-			}, function( err ) {
-	
-				res.status( 400 );
-				res.send( { status: 0, error: err } );
-	
-			} );
-	
-		} );
-	
-		app.get( '/', function( req, res, next ) {
-
-			if ( req.query.edit == true ) {
-	
-				core.db.getPage( { "url == ": '/', 'admin ==': 0 } ).then( function( pageData ) {
-	
-					router.sendStaticPage(
-						req,
-						res,
-						next,
-						{ "url == ": '/edit', 'admin ==': 1 },
-						{ site: site.general, admin: site.admin, editPage: pageData },
-						true
-					);
-	
-				}, function( err ) {
-	
-					res.status( 404 );
-					res.send( err );
-	
-				} );
-	
-			} else {
-				router.sendStaticPage(
-					req,
-					res,
-					next,
-					{ "url == ": '/', 'admin ==': 0 },
-					{ site: site.general }
-				);
-			}
-
-		} );
-	
-		app.post( '/', function( req, res, next ){
-
-			router.emptyCache();
-			var path = req._parsedUrl.pathname.substr( 6 );
-			path = '/';
-			var lastChar = path.substr( path.length - 1, path.length );
-			if ( lastChar == '/' && path != '/' ) path = path.substr( 0, path.length - 1 );
-			var form = req.body;
-			form.cache = form.cache == 1;
-			form.date = ( new Date() ).getTime();
-			core.db.updatePage( path, form ).then( function( err ) {
-	
-				res.send( { status: 1, error: err, pageURL: path } );
-	
-			}, function( err ) {
-	
-				res.send( { status: 0, error: err } );
-	
-			} );
-		} );
-
-		app.use( '/login', function( req, res, next ) {
-			res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
-			next();
-		} )
-		
-		app.get( '/login', function( req, res, next ) {
-
-			var attempts = router.loginRequests[ router.getClientAddress( req ) ];
-
-			var toasts = router.getToasts( req );
-
-			if( req.session.login ) {
-				router.setToast( req, "You are already logged in!" )
-				res.redirect( 307, '/admin' );
-				return false;
-			}
-
-			router.sendStaticPage(
-				req,
-				res,
-				next,
-				{ "url == ": '/login', 'admin != ': 0 },
-				{ site: site.general, admin: site.admin, attempts: attempts, toasts: toasts }
-			);
-
-		} );
-		
-		app.put( '/login', function( req, res, next ){
-			
-			res.send( {status: 0, error: "You lack sufficient privilege to perform that action. Please login. "} )
-			
-		} );
-
-		app.post( '/login', function( req, res, next ) {
-
-			var error = { status: 0, error: "Username/Password combination does not exist." };
-			
-			var username = req.body.username;
-			
-			var password = req.body.password;
-			
-			var attempt = router.limitAttempts( req, res, next );
-			if( !attempt ) {
-				var attempts = router.loginRequests[ router.getClientAddress( req ) ];
-				res.status( 400 );
-				error.error = "Too many attempts!";
-				res.send( error );
-				return false;
-			}
-			
-			core.db.login( username, password ).then( function( pass ) {
-				if( pass ) {
-					// Do cookie stuff
-					
-					router.setLogin( req, username );
-					
-					res.status( 201 );
-					res.send( { status: 1 } );
-				} else {
-					res.status( 400 );
-					res.send( error );
-				}
-			}, function() {
-				res.status( 400 );
-				res.send( error );
-			} );
-		} )
-
-		app.use( '/register', function( req, res, next ) {
-			res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
-			next();
-		} )
-
-		app.post( '/register', function( req, res, next ) {
-
-			var error = { status: 0, error: "Username/Password combination does not exist." };
-
-			if( !core.config.router.openRegistration ) {
-			
-				error.error = "Registration not open!";
-				res.send( error );
-			
-			}
-
-			var username = req.body.username;
-			
-			var password = req.body.password;
-			var password2 = req.body.password2;
-			
-			var attempt = router.limitAttempts( req, res, next );
-			if( !attempt ) {
-				var attempts = router.loginRequests[ router.getClientAddress( req ) ];
-				res.status( 400 );
-				error.error = "Too many attempts!";
-				res.send( error );
-			}
-			
-			if( password != password2 ) {
-				res.status( 400 );
-				error.error = ("Passwords not equal!");
-				res.send( error );
-				return false;
-			}
-			
-			var data = { username: username, password: password };
-			
-			core.db.addUser( data ).then( function() {
-				res.status( 201 );
-				res.send( { status: 1 } );
-			}, function( err ) {
-				res.status( 400 );
-				error.error = err.toString();
-				res.send( error );
-			} );
-
-		} );
-
-		app.get( '/register', function( req, res, next ) {
-
-			if( !core.config.router.openRegistration && !router.requireLogin( req, res, next ))
-				return false;
-
-			router.sendStaticPage(
-				req,
-				res,
-				next,
-				{ "url == ": '/register', 'admin !=': 0 },
-				{ site: site.general, admin: site.admin }
-			);
-
-		} );
-
-		app.delete( '/register', function( req, res, next ) {
-
-			if( !router.requireLogin( req, res, next ) )
-				return false
-
-			var error = { status: 0, error: "Username/Password combination does not exist." };
-			
-			var username = req.body.username;
-			
-			var password = req.body.password;
-			
-			var data = { username: username, password: password };
-			
-			core.db.login( username, password ).then( function( data ) {
-				if( data ) return core.db.removeUser( username ); 
-				else throw new Error( 'User does not exists' );
-			} ).then( function() {
-				res.status( 201 );
-				res.send( { status: 1 } );
-			} ).fail( function( err ) {
-				res.status( 400 );
-				error.error = err.toString();
-				res.send( error );
-			} );
-
-		} );
-
-		app.use( '/settings/*', function( req, res, next ) {
-
-			if( router.requireLogin( req, res, next ) )
-				next();
-
-		} );
-
-		app.post( '/settings', function( req, res, next ) {
-
-			var value = req.body;
-			
-			var newSettings = [];
-			
-			for( var key in req.body ) {
-				newSettings.push( core.db.updateSetting( key, req.body[ key ] ) );
-			}
-			
-			q.all( newSettings ).then( function() {
-				router.emptyCache();
-				router.getSettings();
-				res.status( 201 );
-				res.send( { status: 1 } );
-			}, function( err ) {
-				res.status( 400 );
-				res.send( { status: 0, error: err.message } );
-			} );
-			
-		} );
-		
-		app.get( '/settings', function( req, res, next ) {
-
-			core.db.getSettings().then( function( settings ) {
-				res.send( settings );
-			}, function( err ) {
-				res.send( err );
-			} );
-			
-		} );
-
-		app.use( '/template/*', function( req, res, next ) {
-
-			if( router.requireLogin( req, res, next ) )
-				next();
-
-		} );
-		
-		app.put( '/template/:id', function( req, res, next ) {
-			var key = req.params.id;
-			var form = req.body;
-
-			
-			if ( ! form.data ) {
-	
-				res.status( 400 );
-				res.send( { status: 0, error: "Template must contain string" } );
-				return false;
-	
-			}
-			
-			core.theme.setTemplateFromString( key, form.data, function( err ) {
-				if( err ) {
-					res.status( 400 );
-					res.send( { status: 0, error: err.message } );
-				} else {
-					core.theme.initTemplates( function( err ) {
-						if( err ) {
-							res.status( 400 );
-							res.send( { status: 0, error: err.message } );
-						} else {
-							res.status( 201 );
-							res.send( { status: 1 } );
-						}
-					} );
-				}
-			} );
-		} );
-		
-		app.post( '/template/:id', function( req, res, next ) {
-			var key = req.params.id;
-			var form = req.body;
-
-			
-			if ( ! form.data ) {
-	
-				res.status( 400 );
-				res.send( { status: 0, error: "Template must contain string" } );
-				return false;
-	
-			}
-			
-			core.theme.setTemplateFromString( key, form.data, function( err ) {
-				if( err ) {
-					res.status( 400 );
-					res.send( { status: 0, error: err.message } );
-				} else {
-					core.theme.initTemplates( function( err ) {
-						if( err ) {
-							res.status( 400 );
-							res.send( { status: 0, error: err.message } );
-						} else {
-							router.emptyCache();
-							res.status( 201 );
-							res.send( { status: 1 } );
-						}
-					} );
-				}
-			} );
-		} );
-		
-		app.delete( '/template/:id', function( req, res, next ) {
-
-			router.emptyCache();
-			var key = req.params.id;
-			
-			core.theme.deleteTemplate( key, function( err ) {
-				if( err ) {
-					res.status( 400 );
-					res.send( { status: 0, error: err.message } );
-				} else {
-					core.theme.initTemplates( function( err ) {
-						if( err ) {
-							res.status( 400 );
-							res.send( { status: 0, error: err.message } );
-						} else {
-							res.status( 201 );
-							res.send( { status: 1 } );
-						}
-					} );
-				}
-			} );
-		} );
-		
-		app.get( '/template/:id', function( req, res, next ) {
-			var key = req.params.id;
-			core.db.getPage( { "title == ": key, 'admin != ': 0, "url LIKE ": "__template__%" } ).then( function( pageData ) {
-				router.sendStaticPage(
-					req,
-					res,
-					next,
-					{ "url == ": '/editTemplate', 'admin ==': 1 },
+					{ "url == ": '/edit', 'admin ==': 1 },
 					{ site: site.general, admin: site.admin, editPage: pageData },
 					true
 				);
@@ -890,174 +572,749 @@ function init( app, router, core, site ) {
 				res.send( err );
 
 			} );
-		} )
-	
-		app.use( '/debug/*', function( req, res, next ) {
 
-			if( router.requireLogin( req, res, next ) )
-				next();
+		} else {
 
-		} );
-
-		app.get( '/debug/db', function( req, res ) {
-
-			var table = 'pages';
-			if( req.query.table ) table = req.query.table;
-			
-			var query = req.query.query? req.query.query : 'SELECT * FROM ' + table;
-			
-			console.log( query );
-			
-			core.db._All( query, {} ).then( function( row ) {
-	
-				res.send( '<pre>' + JSON.stringify( row, '\n', 4 ) + '</pre>' );
-	
-			}, function( err ) {
-
-				console.log( err );
-				res.send( err );
-
-			} );
-	
-		} );
-		
-		app.get( '/debug/db/update', function(req, res, next) {
-			
-		} )
-		
-		app.get( '/debug/core', function( req, res ) {
-			res.send( core );
-		} );
-	
-		app.get( '/debug/template', function(req, res, next) {
-		
-			var templates = [];
-			
-			for( var i in core.theme.templateCache ) {
-				templates.push( i );
-			}
-			
-			res.send(templates);
-		
-		} );
-		
-		app.get( '/debug/hash', function( req, res, next ) {
-			console.log( req.query.pass.length );
-			console.time( 'passHash' );
-			
-			core.db.addUser( {password: req.query.pass, username: req.query.user} ).then( function( hash ) {
-				console.timeEnd( 'passHash' );
-				res.send( hash );
-				
-			}, function( err ) {
-				console.timeEnd( 'passHash' );
-				console.log( err );
-				res.send( 'error' );
-			} );
-			
-		} );
-		
-		app.get( '/debug/login', function( req, res, next ) {
-
-			console.log( 'Rawr' );
-			core.db.login( req.query.user, req.query.pass ).then( function( pass ) {
-				res.send( pass );
-			}, function( err ) {
-				res.send( err.toString() );
-			} );
-
-		} );
-		
-		app.use( '/admin/*', function( req, res, next ) {
-
-			res.set('Cache-Control', 'private, no-cache, no-store, must-revalidate');
-
-			if( router.requireLogin( req, res, next ) )
-				next();
-
-		} );
-
-		app.get( '/admin/', function( req, res, next ) {
-	
-			var re = router.getRedirect( req );
-			if( re )
-				res.redirect( 307, re );
-	
 			router.sendStaticPage(
 				req,
 				res,
 				next,
-				{ "url == ": '/admin', 'admin !=': 0 },
-				{ site: site.general, admin: site.admin }
+				{ "url == ": path, 'admin ==': 0 },
+				{ site: site.general }
 			);
-	
-		} );
-		
-		app.get( '/admin/template', function( req, res, next ) {
-	
-			router.sendStaticPage(
-				req,
-				res,
-				next,
-				{ "url == ": '/template', 'admin !=': 0 },
-				{ site: site.general, admin: site.admin }
-			);
-	
+
+		}
+
+	} );
+
+	app.post( '/pages/*', function( req, res, next ) {
+
+		if ( ! router.requireLogin( req, res, next ) )
+			return false
+
+		router.emptyCache();
+		var path = req._parsedUrl.pathname.substr( 6 );
+		var lastChar = path.substr( path.length - 1, path.length );
+		if ( lastChar == '/' && path != '/' ) path = path.substr( 0, path.length - 1 );
+		var form = req.body;
+		form.cache = form.cache == 1;
+		form.date = ( new Date() ).getTime();
+		core.db.updatePage( path, form ).then( function( err ) {
+
+			res.send( { status: 1, error: err, pageURL: path } );
+
+		}, function( err ) {
+
+			res.send( { status: 0, error: err } );
+
 		} );
 
-		app.get( '/admin/templates', function( req, res, next ) {
-			router.sendStaticPage(
-				req,
-				res,
-				next,
-				{ "url == ": '/templates', 'admin ==': 1 },
-				{ site: site.general, admin: site.admin },
-				true
-			);
-		} );
-		
-		app.get( '/admin/settings', function( req, res, next ) {
+	} );
 
-			core.db.getSettings().then( function( data ) {
+	app.put( '/pages/*', function( req, res, next ) {
+
+		if ( ! router.requireLogin( req, res, next ) )
+			return false
+
+		var path = req._parsedUrl.pathname.substr( 6 );
+		var lastChar = path.substr( path.length - 1, path.length );
+		if ( lastChar == '/' && path != '/' ) path = path.substr( 0, path.length - 1 );
+
+		var form = req.body;
+		form.url = path;
+		form.admin = 0;
+		form.cache = form.cache == 1;
+
+		if ( ! form.data || ! form.title ) {
+
+			res.status( 400 );
+			res.send( { status: 0, error: "Title and data field must be filled" } );
+			return false;
+
+		}
+
+		core.db.insertPage( form ).then( function() {
+
+			res.status( 201 );
+			res.send( { status: 1 } );
+
+		}, function( err ) {
+
+			res.status( 400 );
+			res.send( { status: 0, error: err.message } );
+
+		} );
+
+	} );
+
+	app.delete( '/pages/*', function( req, res, next ) {
+
+		if ( ! router.requireLogin( req, res, next ) )
+			return false
+
+		router.emptyCache();
+		var path = req._parsedUrl.pathname.substr( 6 );
+		var lastChar = path.substr( path.length - 1, path.length );
+		if ( lastChar == '/' && path != '/' ) path = path.substr( 0, path.length - 1 );
+
+		core.db.deletePage( path ).then( function( err ) {
+
+			res.status( 200 );
+			res.send( { status: 1, error: err } );
+
+		}, function( err ) {
+
+			res.status( 400 );
+			res.send( { status: 0, error: err } );
+
+		} );
+
+	} );
+
+	app.get( '/', function( req, res, next ) {
+
+		if ( req.query.edit == true ) {
+
+			core.db.getPage( { "url == ": '/', 'admin ==': 0 } ).then( function( pageData ) {
 
 				router.sendStaticPage(
 					req,
 					res,
 					next,
-					{ "url == ": '/settings', 'admin ==': 1 },
-					{ site: site.general, admin: site.admin, settings: data },
+					{ "url == ": '/edit', 'admin ==': 1 },
+					{ site: site.general, admin: site.admin, editPage: pageData },
 					true
 				);
 
 			}, function( err ) {
-				
+
+				res.status( 404 );
 				res.send( err );
 
 			} );
 
+		} else {
+
+			router.sendStaticPage(
+				req,
+				res,
+				next,
+				{ "url == ": '/', 'admin ==': 0 },
+				{ site: site.general }
+			);
+
+		}
+
+	} );
+
+	app.post( '/', function( req, res, next ) {
+
+		router.emptyCache();
+		var path = req._parsedUrl.pathname.substr( 6 );
+		path = '/';
+		var lastChar = path.substr( path.length - 1, path.length );
+		if ( lastChar == '/' && path != '/' ) path = path.substr( 0, path.length - 1 );
+		var form = req.body;
+		form.cache = form.cache == 1;
+		form.date = ( new Date() ).getTime();
+		core.db.updatePage( path, form ).then( function( err ) {
+
+			res.send( { status: 1, error: err, pageURL: path } );
+
+		}, function( err ) {
+
+			res.send( { status: 0, error: err } );
+
 		} );
-	
-		app.get( '/admin/pages', function( req, res, next ) {
-	
-			var offset = isNaN( + req.query.offset ) ? 0 : ( + req.query.offset );
-			var query =  { "admin == ": 0 };
-			var order = { date: false };
-			var search = req.query.search;
-			if( search ) {
-				query[ "title LIKE $title OR url LIKE " ] = '%' + search + '%';
+
+	} );
+
+	app.use( '/login', function( req, res, next ) {
+
+		res.set( 'Cache-Control', 'private, no-cache, no-store, must-revalidate' );
+		next();
+
+	} )
+
+	app.get( '/login', function( req, res, next ) {
+
+		var attempts = router.loginRequests[ router.getClientAddress( req ) ];
+
+		var toasts = router.getToasts( req );
+
+		if ( req.session.login ) {
+
+			router.setToast( req, "You are already logged in!" )
+			res.redirect( 307, '/admin' );
+			return false;
+
+		}
+
+		router.sendStaticPage(
+			req,
+			res,
+			next,
+			{ "url == ": '/login', 'admin != ': 0 },
+			{ site: site.general, admin: site.admin, attempts: attempts, toasts: toasts }
+		);
+
+	} );
+
+	app.put( '/login', function( req, res, next ) {
+
+		res.send( { status: 0, error: "You lack sufficient privilege to perform that action. Please login. " } )
+
+	} );
+
+	app.post( '/login', function( req, res, next ) {
+
+		var error = { status: 0, error: "Username/Password combination does not exist." };
+
+		var username = req.body.username;
+
+		var password = req.body.password;
+
+		var attempt = router.limitAttempts( req, res, next );
+		if ( ! attempt ) {
+
+			var attempts = router.loginRequests[ router.getClientAddress( req ) ];
+			res.status( 400 );
+			error.error = "Too many attempts!";
+			res.send( error );
+			return false;
+
+		}
+
+		core.db.login( username, password ).then( function( pass ) {
+
+			if ( pass ) {
+
+				// Do cookie stuff
+
+				router.setLogin( req, username );
+
+				res.status( 201 );
+				res.send( { status: 1 } );
+
+			} else {
+
+				res.status( 400 );
+				res.send( error );
+
 			}
-			if( req.query.order ) {
-				order = {}
-				order[ req.query.order ] = false;
-				if( req.query.by ) {
-					order[ req.query.order ] = req.query.by.toLowerCase() == 'asc'; 
-				}
+
+		}, function() {
+
+			res.status( 400 );
+			res.send( error );
+
+		} );
+
+	} )
+
+	app.use( '/register', function( req, res, next ) {
+
+		res.set( 'Cache-Control', 'private, no-cache, no-store, must-revalidate' );
+		next();
+
+	} )
+
+	app.post( '/register', function( req, res, next ) {
+
+		var error = { status: 0, error: "Username/Password combination does not exist." };
+
+		if ( ! core.config.router.openRegistration ) {
+
+			error.error = "Registration not open!";
+			res.send( error );
+
+		}
+
+		var username = req.body.username;
+
+		var password = req.body.password;
+		var password2 = req.body.password2;
+
+		var attempt = router.limitAttempts( req, res, next );
+		if ( ! attempt ) {
+
+			var attempts = router.loginRequests[ router.getClientAddress( req ) ];
+			res.status( 400 );
+			error.error = "Too many attempts!";
+			res.send( error );
+
+		}
+
+		if ( password != password2 ) {
+
+			res.status( 400 );
+			error.error = ( "Passwords not equal!" );
+			res.send( error );
+			return false;
+
+		}
+
+		var data = { username: username, password: password };
+
+		core.db.addUser( data ).then( function() {
+
+			res.status( 201 );
+			res.send( { status: 1 } );
+
+		}, function( err ) {
+
+			res.status( 400 );
+			error.error = err.toString();
+			res.send( error );
+
+		} );
+
+	} );
+
+	app.get( '/register', function( req, res, next ) {
+
+		if ( ! core.config.router.openRegistration && ! router.requireLogin( req, res, next ) )
+			return false;
+
+		router.sendStaticPage(
+			req,
+			res,
+			next,
+			{ "url == ": '/register', 'admin !=': 0 },
+			{ site: site.general, admin: site.admin }
+		);
+
+	} );
+
+	app.delete( '/register', function( req, res, next ) {
+
+		if ( ! router.requireLogin( req, res, next ) )
+			return false
+
+		var error = { status: 0, error: "Username/Password combination does not exist." };
+
+		var username = req.body.username;
+
+		var password = req.body.password;
+
+		var data = { username: username, password: password };
+
+		core.db.login( username, password ).then( function( data ) {
+
+			if ( data ) return core.db.removeUser( username );
+			else throw new Error( 'User does not exists' );
+
+		} ).then( function() {
+
+			res.status( 201 );
+			res.send( { status: 1 } );
+
+		} ).fail( function( err ) {
+
+			res.status( 400 );
+			error.error = err.toString();
+			res.send( error );
+
+		} );
+
+	} );
+
+	app.use( '/settings/*', function( req, res, next ) {
+
+		if ( router.requireLogin( req, res, next ) )
+			next();
+
+	} );
+
+	app.post( '/settings', function( req, res, next ) {
+
+		var value = req.body;
+
+		var newSettings = [];
+
+		for ( var key in req.body ) {
+
+			newSettings.push( core.db.updateSetting( key, req.body[ key ] ) );
+
+		}
+
+		q.all( newSettings ).then( function() {
+
+			router.emptyCache();
+			router.getSettings();
+			res.status( 201 );
+			res.send( { status: 1 } );
+
+		}, function( err ) {
+
+			res.status( 400 );
+			res.send( { status: 0, error: err.message } );
+
+		} );
+
+	} );
+
+	app.get( '/settings', function( req, res, next ) {
+
+		core.db.getSettings().then( function( settings ) {
+
+			res.send( settings );
+
+		}, function( err ) {
+
+			res.send( err );
+
+		} );
+
+	} );
+
+	app.use( '/template/*', function( req, res, next ) {
+
+		if ( router.requireLogin( req, res, next ) )
+			next();
+
+	} );
+
+	app.put( '/template/:id', function( req, res, next ) {
+
+		var key = req.params.id;
+		var form = req.body;
+
+
+		if ( ! form.data ) {
+
+			res.status( 400 );
+			res.send( { status: 0, error: "Template must contain string" } );
+			return false;
+
+		}
+
+		core.theme.setTemplateFromString( key, form.data, function( err ) {
+
+			if ( err ) {
+
+				res.status( 400 );
+				res.send( { status: 0, error: err.message } );
+
+			} else {
+
+				core.theme.initTemplates( function( err ) {
+
+					if ( err ) {
+
+						res.status( 400 );
+						res.send( { status: 0, error: err.message } );
+
+					} else {
+
+						res.status( 201 );
+						res.send( { status: 1 } );
+
+					}
+
+				} );
+
 			}
-			
-			// core.db._All( 'SELECT * FROM pages WHERE ((title LIKE $title OR url LIKE $url) AND admin == 0)', {$title: '%' + search + '%', $url: '%' + search + '%'} )
-			core.db.get( 'pages', [ '*' ], query, order, 20, offset )
+
+		} );
+
+	} );
+
+	app.post( '/template/:id', function( req, res, next ) {
+
+		var key = req.params.id;
+		var form = req.body;
+
+
+		if ( ! form.data ) {
+
+			res.status( 400 );
+			res.send( { status: 0, error: "Template must contain string" } );
+			return false;
+
+		}
+
+		core.theme.setTemplateFromString( key, form.data, function( err ) {
+
+			if ( err ) {
+
+				res.status( 400 );
+				res.send( { status: 0, error: err.message } );
+
+			} else {
+
+				core.theme.initTemplates( function( err ) {
+
+					if ( err ) {
+
+						res.status( 400 );
+						res.send( { status: 0, error: err.message } );
+
+					} else {
+
+						router.emptyCache();
+						res.status( 201 );
+						res.send( { status: 1 } );
+
+					}
+
+				} );
+
+			}
+
+		} );
+
+	} );
+
+	app.delete( '/template/:id', function( req, res, next ) {
+
+		router.emptyCache();
+		var key = req.params.id;
+
+		core.theme.deleteTemplate( key, function( err ) {
+
+			if ( err ) {
+
+				res.status( 400 );
+				res.send( { status: 0, error: err.message } );
+
+			} else {
+
+				core.theme.initTemplates( function( err ) {
+
+					if ( err ) {
+
+						res.status( 400 );
+						res.send( { status: 0, error: err.message } );
+
+					} else {
+
+						res.status( 201 );
+						res.send( { status: 1 } );
+
+					}
+
+				} );
+
+			}
+
+		} );
+
+	} );
+
+	app.get( '/template/:id', function( req, res, next ) {
+
+		var key = req.params.id;
+		core.db.getPage( { "title == ": key, 'admin != ': 0, "url LIKE ": "__template__%" } ).then( function( pageData ) {
+
+			router.sendStaticPage(
+				req,
+				res,
+				next,
+				{ "url == ": '/editTemplate', 'admin ==': 1 },
+				{ site: site.general, admin: site.admin, editPage: pageData },
+				true
+			);
+
+		}, function( err ) {
+
+			res.status( 404 );
+			res.send( err );
+
+		} );
+
+	} )
+
+	app.use( '/debug/*', function( req, res, next ) {
+
+		if ( router.requireLogin( req, res, next ) )
+			next();
+
+	} );
+
+	app.get( '/debug/db', function( req, res ) {
+
+		var table = 'pages';
+		if ( req.query.table ) table = req.query.table;
+
+		var query = req.query.query ? req.query.query : 'SELECT * FROM ' + table;
+
+		console.log( query );
+
+		core.db._All( query, {} ).then( function( row ) {
+
+			res.send( '<pre>' + JSON.stringify( row, '\n', 4 ) + '</pre>' );
+
+		}, function( err ) {
+
+			console.log( err );
+			res.send( err );
+
+		} );
+
+	} );
+
+	app.get( '/debug/db/update', function( req, res, next ) {
+
+	} )
+
+	app.get( '/debug/core', function( req, res ) {
+
+		res.send( core );
+
+	} );
+
+	app.get( '/debug/template', function( req, res, next ) {
+
+		var templates = [];
+
+		for ( var i in core.theme.templateCache ) {
+
+			templates.push( i );
+
+		}
+
+		res.send( templates );
+
+	} );
+
+	app.get( '/debug/hash', function( req, res, next ) {
+
+		console.log( req.query.pass.length );
+		console.time( 'passHash' );
+
+		core.db.addUser( { password: req.query.pass, username: req.query.user } ).then( function( hash ) {
+
+			console.timeEnd( 'passHash' );
+			res.send( hash );
+
+		}, function( err ) {
+
+			console.timeEnd( 'passHash' );
+			console.log( err );
+			res.send( 'error' );
+
+		} );
+
+	} );
+
+	app.get( '/debug/login', function( req, res, next ) {
+
+		console.log( 'Rawr' );
+		core.db.login( req.query.user, req.query.pass ).then( function( pass ) {
+
+			res.send( pass );
+
+		}, function( err ) {
+
+			res.send( err.toString() );
+
+		} );
+
+	} );
+
+	app.use( [ '/admin/*', '/admin' ], function( req, res, next ) {
+
+		res.set( 'Cache-Control', 'private, no-cache, no-store, must-revalidate' );
+
+		if ( router.requireLogin( req, res, next ) )
+			next();
+
+	} );
+
+	app.get( '/admin/', function( req, res, next ) {
+
+		var re = router.getRedirect( req );
+		if ( re ) {
+
+			res.redirect( 307, re );
+			return false;
+
+		}
+
+		router.sendStaticPage(
+			req,
+			res,
+			next,
+			{ "url == ": '/admin', 'admin !=': 0 },
+			{ site: site.general, admin: site.admin }
+		);
+
+	} );
+
+	app.get( '/admin/template', function( req, res, next ) {
+
+		router.sendStaticPage(
+			req,
+			res,
+			next,
+			{ "url == ": '/template', 'admin !=': 0 },
+			{ site: site.general, admin: site.admin }
+		);
+
+	} );
+
+	app.get( '/admin/templates', function( req, res, next ) {
+
+		router.sendStaticPage(
+			req,
+			res,
+			next,
+			{ "url == ": '/templates', 'admin ==': 1 },
+			{ site: site.general, admin: site.admin },
+			true
+		);
+
+	} );
+
+	app.get( '/admin/settings', function( req, res, next ) {
+
+		core.db.getSettings().then( function( data ) {
+
+			router.sendStaticPage(
+				req,
+				res,
+				next,
+				{ "url == ": '/settings', 'admin ==': 1 },
+				{ site: site.general, admin: site.admin, settings: data },
+				true
+			);
+
+		}, function( err ) {
+
+			res.send( err );
+
+		} );
+
+	} );
+
+	app.get( '/admin/pages', function( req, res, next ) {
+
+		var offset = isNaN( + req.query.offset ) ? 0 : ( + req.query.offset );
+		var query = { "admin == ": 0 };
+		var order = { date: false };
+		var search = req.query.search;
+		if ( search ) {
+
+			query[ "title LIKE $title OR url LIKE " ] = '%' + search + '%';
+
+		}
+		if ( req.query.order ) {
+
+			order = {}
+			order[ req.query.order ] = false;
+			if ( req.query.by ) {
+
+				order[ req.query.order ] = req.query.by.toLowerCase() == 'asc';
+
+			}
+
+		}
+
+		// core.db._All( 'SELECT * FROM pages WHERE ((title LIKE $title OR url LIKE $url) AND admin == 0)', {$title: '%' + search + '%', $url: '%' + search + '%'} )
+		core.db.get( 'pages', [ '*' ], query, order, 20, offset )
 			.then( function( row ) {
-	
+
 				router.sendStaticPage(
 					req,
 					res,
@@ -1065,24 +1322,24 @@ function init( app, router, core, site ) {
 					{ "url == ": '/admin/pages', 'admin !=': 0 },
 					{ site: site.general, admin: site.admin, pages: row }
 				)
-	
+
 			}, function( err ) {
-	
+
 				res.status( 404 );
 				res.send( err );
-	
+
 			} );
-	
-		} );
-	
-		app.all( '/*', function( req, res ) {
-	
-			res.status( 404 );
-			res.send( '404 :C' );
-	
-		} );
 
-		core.plugins.endPlugins( core, app );
+	} );
+
+	app.all( '/*', function( req, res ) {
+
+		res.status( 404 );
+		res.send( '404 :C' );
+
+	} );
+
+	core.plugins.endPlugins( core, app );
 
 
-	};
+};
