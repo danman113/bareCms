@@ -45,8 +45,9 @@ function dataAjax( method , success, error ){
     })
 };
 
-function dynamicForm( formSelector, submit){
+function dynamicForm( formSelector, submit ){
     var formData = {};
+
     $(formSelector).find('input[type="text"], input[type="checkbox"], input[type="range"], input[type="password"], textarea, select').each( function( i, elem ){
         console.log(arguments);
         elem = $(elem);
@@ -54,8 +55,10 @@ function dynamicForm( formSelector, submit){
         elem.change( function(){
             formData[ elem.attr('name') ] = getElemData( elem );
         });
+        
     });
     $(formSelector).submit( function( event ) {
+        delete formData[ 'undefined' ];
         submit( event, formData );
     });
     return formData;
@@ -65,5 +68,35 @@ function getElemData( elem ){
     return elem.attr('type') == 'checkbox' || elem.attr('type') == 'radio' ?
     elem.prop('checked'):
     elem.val();
+}
+
+function addCodeMirror( elem ) {
+
+    var mac = CodeMirror.keyMap["default"] == CodeMirror.keyMap.macDefault;
+    var ctrl = mac ? "Cmd-" : "Ctrl-";
+    var map = {fallthrough: "default"};
+    var cmds = CodeMirror.commands;
+
+
+    cmds[map[ctrl + "S"] = "submit"] = function (){
+        $(elem).closest("form").submit();
+    };
+
+    var options = {
+        keyMap: 'sublime',
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        showCursorWhenSelecting: true,
+        theme: "monokai",
+        extraKeys: map,
+        mode: "pug",
+        tabSize: 2,
+        lineNumbers: true
+    };
+
+    
+
+    return CodeMirror.fromTextArea( elem, options );
+
 }
 

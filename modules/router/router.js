@@ -320,7 +320,7 @@ module.exports = function( core, callback ) {
 
 		router.setRedirect( req, req._parsedUrl.pathname );
 		router.setToast( req, "You must log in to view that page!" )
-		res.redirect( 307, '/login' );
+		res.redirect( '/login' );
 
 	};
 
@@ -530,6 +530,13 @@ function init( app, router, core, site ) {
 		)
 	);
 
+	app.use( '/staticAdmin', function( req, res, next ) {
+
+		if ( router.requireLogin( req, res, next ) )
+			next();
+
+	} );
+
 	app.use(
 		'/staticAdmin',
 		express.static(
@@ -553,7 +560,7 @@ function init( app, router, core, site ) {
 		var path = req._parsedUrl.pathname.substr( 6 );
 		var lastChar = path.substr( path.length - 1, path.length );
 		if ( lastChar == '/' && path != '/' ) path = path.substr( 0, path.length - 1 );
-		if ( req.query.edit == true ) {
+		if ( req.query.edit == true && req.session.login ) {
 
 			core.db.getPage( { "url == ": path, 'admin ==': 0 } ).then( function( pageData ) {
 
@@ -562,7 +569,7 @@ function init( app, router, core, site ) {
 					res,
 					next,
 					{ "url == ": '/edit', 'admin ==': 1 },
-					{ site: site.general, admin: site.admin, editPage: pageData },
+					{ site: site.general, admin: site.admin, editPage: pageData, toasts: router.getToasts( req ) },
 					true
 				);
 
@@ -673,7 +680,7 @@ function init( app, router, core, site ) {
 
 	app.get( '/', function( req, res, next ) {
 
-		if ( req.query.edit == true ) {
+		if ( req.query.edit == true  && req.session.login ) {
 
 			core.db.getPage( { "url == ": '/', 'admin ==': 0 } ).then( function( pageData ) {
 
@@ -740,12 +747,10 @@ function init( app, router, core, site ) {
 
 		var attempts = router.loginRequests[ router.getClientAddress( req ) ];
 
-		var toasts = router.getToasts( req );
-
 		if ( req.session.login ) {
 
 			router.setToast( req, "You are already logged in!" )
-			res.redirect( 307, '/admin' );
+			res.redirect( '/admin' );
 			return false;
 
 		}
@@ -755,14 +760,29 @@ function init( app, router, core, site ) {
 			res,
 			next,
 			{ "url == ": '/login', 'admin != ': 0 },
-			{ site: site.general, admin: site.admin, attempts: attempts, toasts: toasts }
+			{ site: site.general, admin: site.admin, attempts: attempts, toasts: router.getToasts( req ) }
 		);
 
 	} );
 
+
 	app.put( '/login', function( req, res, next ) {
 
 		res.send( { status: 0, error: "You lack sufficient privilege to perform that action. Please login. " } )
+
+	} );
+
+	app.get( '/logout', function( req, res, next ) {
+
+		if ( ! router.requireLogin( req, res, next ) )
+			return false
+
+		delete req.session.login;
+
+		router.setToast( req, 'You have been successfuly logged out!' );
+
+		res.redirect( '/login' );
+		
 
 	} );
 
@@ -1112,7 +1132,7 @@ function init( app, router, core, site ) {
 				res,
 				next,
 				{ "url == ": '/editTemplate', 'admin ==': 1 },
-				{ site: site.general, admin: site.admin, editPage: pageData },
+				{ site: site.general, admin: site.admin, editPage: pageData, toasts: router.getToasts( req ) },
 				true
 			);
 
@@ -1227,7 +1247,7 @@ function init( app, router, core, site ) {
 		var re = router.getRedirect( req );
 		if ( re ) {
 
-			res.redirect( 307, re );
+			res.redirect( re );
 			return false;
 
 		}
@@ -1236,8 +1256,8 @@ function init( app, router, core, site ) {
 			req,
 			res,
 			next,
-			{ "url == ": '/admin', 'admin !=': 0 },
-			{ site: site.general, admin: site.admin }
+			{ "url == ": '/home', 'admin !=': 0 },
+			{ site: site.general, admin: site.admin, toasts: router.getToasts( req ) }
 		);
 
 	} );
@@ -1249,7 +1269,19 @@ function init( app, router, core, site ) {
 			res,
 			next,
 			{ "url == ": '/template', 'admin !=': 0 },
-			{ site: site.general, admin: site.admin }
+			{ site: site.general, admin: site.admin, toasts: router.getToasts( req ) }
+		);
+
+	} );
+
+	app.get( '/admin/page', function( req, res, next ) {
+
+		router.sendStaticPage(
+			req,
+			res,
+			next,
+			{ "url == ": '/page', 'admin !=': 0 },
+			{ site: site.general, admin: site.admin, toasts: router.getToasts( req ) }
 		);
 
 	} );
@@ -1261,7 +1293,7 @@ function init( app, router, core, site ) {
 			res,
 			next,
 			{ "url == ": '/templates', 'admin ==': 1 },
-			{ site: site.general, admin: site.admin },
+			{ site: site.general, admin: site.admin, toasts: router.getToasts( req ) },
 			true
 		);
 
@@ -1276,7 +1308,7 @@ function init( app, router, core, site ) {
 				res,
 				next,
 				{ "url == ": '/settings', 'admin ==': 1 },
-				{ site: site.general, admin: site.admin, settings: data },
+				{ site: site.general, admin: site.admin, settings: data, toasts: router.getToasts( req ) },
 				true
 			);
 
@@ -1320,7 +1352,7 @@ function init( app, router, core, site ) {
 					res,
 					next,
 					{ "url == ": '/admin/pages', 'admin !=': 0 },
-					{ site: site.general, admin: site.admin, pages: row }
+					{ site: site.general, admin: site.admin, pages: row, toasts: router.getToasts( req ) }
 				)
 
 			}, function( err ) {

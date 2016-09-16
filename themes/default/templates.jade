@@ -11,11 +11,12 @@ table.table.table-striped
         th
           b= template
         th
-          button.btn-link(
-            data-delete="/template/#{template}"
-            style="font-weight:bold;"
-            data-json="{hi:1}"
-          ) Delete
+          if template != 'blank'
+            button.btn-link(
+              data-delete="/template/#{template}"
+              style="font-weight:bold;"
+              data-json="{hi:1}"
+            ) Delete
           
           a(href="/template/#{template}")
             b Edit

@@ -3,10 +3,10 @@ html(lang="en")
   head
     title= title
     meta(name='viewport', content='width=device-width, initial-scale=1.0')
-    link(href='//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css', rel='stylesheet')
-    script(src='//code.jquery.com/jquery-2.2.4.min.js')
-    script(src='//maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js')
-    script(src='/staticAdmin/default/admin/admin.js')
+    link(href='/static/default/bootstrap/bootstrap.min.css', rel='stylesheet')
+    script(src='/static/default/bootstrap/jquery-2.2.4.min.js')
+    script(src='/static/default/bootstrap/bootstrap.min.js')
+    script(src='/static/default/admin/admin.js')
   body
     nav.navbar.navbar-default
       .container-fluid
@@ -22,10 +22,20 @@ html(lang="en")
             li
               a(href='/admin/pages') Pages
             li
-              a(href='/admin/templates') Templates 
+              a(href='/admin/templates') Templates
+            li
+              a(href='/register') Register
+            li
+              a(href='/admin/settings') Settings 
           form.navbar-form.navbar-left(role='search' method='GET' action='/admin/pages')
             .form-group
               input.form-control(type='text', placeholder='Search' name='search')
             button.btn.btn-default(type='submit') Submit
+          ul.nav.navbar-nav.navbar-right
+            li
+              a(href='/logout') Logout
     .container
+      .toastContainer
+        each val in toasts
+          .alert.alert-danger= val
       | !{pageData}

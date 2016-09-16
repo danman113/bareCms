@@ -499,13 +499,13 @@ module.exports = function( core, callback ) {
 				console.log( 'Copying ' + file.path );
 				
 				var themeFilepath = path.resolve(
-					core.config.theme.folder,
+					srcFolder.path,
 					core.config.theme.theme,
 					srcFolder.name,
 					file.path
 				);
 				var staticFilepath = path.resolve(
-					core.config.router.staticAdminURL,
+					destFolder.path,
 					core.config.theme.theme,
 					destFolder.name,
 					file.path
@@ -533,12 +533,29 @@ module.exports = function( core, callback ) {
 
 	}
 
-	theme.ensureConsistency = function( filepath ) {
+	theme.ensureConsistencyAdmin = function( filepath ) {
+
+		return theme.ensureConsistency(
+			filepath, core.config.theme.folder,
+			core.config.router.staticAdminURL
+		);
+
+	};
+
+	theme.ensureConsistencyStatic = function( filepath ) {
+
+		return theme.ensureConsistency(
+			filepath, core.config.theme.folder,
+			core.config.router.staticURL
+		);
+
+	};
+
+	theme.ensureConsistency = function( filepath, srcFolder, destFolder ) {
 
 		var deffered = q.defer();
-		var themeFilepath = path.resolve( core.config.theme.folder, core.config.theme.theme, filepath );
-		var staticFilepath = path.resolve( core.config.router.staticAdminURL, core.config.theme.theme, filepath );
-
+		var themeFilepath = path.resolve( srcFolder, core.config.theme.theme, filepath );
+		var staticFilepath = path.resolve( destFolder, core.config.theme.theme, filepath );
 
 		var themeFolder = [];
 		
@@ -547,9 +564,11 @@ module.exports = function( core, callback ) {
 		theme._getAllFolders( themeFilepath, themeFolder ).then( function( arr ) {
 			themeFolder = arr;
 			themeFolder.name = filepath;
+			themeFolder.path = srcFolder;
 			return theme._getAllFolders( staticFilepath).then( function( arr ) {
 				staticFolder = arr;
 				staticFolder.name = filepath;
+				staticFolder.path = destFolder;
 			}, function() {
 				console.log( 'Copying folder ' + themeFilepath + '!' );
 				var copyDeffered = q.defer();
@@ -574,7 +593,6 @@ module.exports = function( core, callback ) {
 		} );
 
 		return deffered.promise;
-
 
 	}
 
