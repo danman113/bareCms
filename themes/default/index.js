@@ -15,6 +15,7 @@ module.exports = function( core, theme, callback ) {
 			theme.addAdminPageFromFile( '/templates', 'templates.jade', 'admin' ),
 			theme.addAdminPageFromFile( '/settings', 'settings.jade', 'admin' ),
 			theme.addAdminPageFromFile( '/upload', 'upload.jade', 'admin' ),
+			theme.addAdminPageFromFile( '/fileBrowser', 'fileBrowser.jade', 'admin' ),
 			theme.addAdminPageFromFile( '/page', 'page.jade', 'admin' ),
 			theme.addAdminPageFromFile( '/login', 'login.jade', 'adminBlank' ),
 			theme.addAdminPageFromFile( '/register', 'register.jade', 'adminBlank' ),

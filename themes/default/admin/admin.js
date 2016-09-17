@@ -1,6 +1,3 @@
-$(document).ready( function() {
-    deleteRequest();
-});
 
 function deleteRequest(){
     dataAjax(
@@ -23,7 +20,7 @@ function deleteRequest(){
             alert(err.responseJSON.error);
         }
     );
-};
+}
 
 function dataAjax( method , success, error ){
     $('[data-' + method + ']').click(function(){
@@ -48,7 +45,7 @@ function dataAjax( method , success, error ){
 function dynamicForm( formSelector, submit ){
     var formData = {};
 
-    $(formSelector).find('input[type="text"], input[type="checkbox"], input[type="range"], input[type="password"], textarea, select').each( function( i, elem ){
+    $(formSelector).find('input[type="text"], input[type="checkbox"], input[type="range"], input[type="password"],input[type="hidden"], textarea, select').each( function( i, elem ){
         console.log(arguments);
         elem = $(elem);
         formData[ elem.attr('name') ] = getElemData( elem );

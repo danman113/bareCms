@@ -1,0 +1,147 @@
+script.
+	function progress( e ) {
+		if(e.lengthComputable){
+				var max = e.total;
+				var current = e.loaded;
+
+				var Percentage = (current * 100)/max;
+				$( '#progress' ).css( 'width', Percentage + '%' );
+				$( '#progress' ).text( Percentage.toFixed( 2 ) + '%' );
+				console.log(Percentage);
+		}
+	}
+	$(document).ready( function() {
+		
+		$( '#newfolder' ).click( function() {
+			$( '#folder' ).removeClass( 'hidden' );
+			$( '#foldername').focus();
+		} );
+
+		dataAjax(
+			'delete',
+			function(data, element){
+					var page = element.getAttribute('data-file');
+					console.log( arguments, page );
+					if(data.status){
+							alert('File '+ page +' deleted!');
+							$(element).parent().parent().fadeOut('slow', function(){
+									$(element).parent().parent().remove();
+							});
+					} else {
+							console.log(data);
+							alert(data.error);
+					}
+			},
+			function( err, body ) {
+					console.log(err);
+					alert(err.responseJSON.error);
+			}
+		);
+		
+		dynamicForm('#folder', function( e, data){
+			e.preventDefault();
+			$.ajax({
+				type: 'PUT',
+				data: data,
+				url: '/files/upload',
+				success: function(data){
+						if(data.status){
+							alert('Folder created!');
+							location.reload();
+						} else {
+							console.log( data );
+							alert(data.error);
+						}
+				},
+				error: function(err){
+					console.log(err);
+				}
+			});
+		});
+
+		dynamicForm('#upload', function( e, data){
+			e.preventDefault();
+			e.stopPropagation();
+			var formdata = new FormData($( '#upload' )[0]);
+			$( '#progress' ).removeClass( 'hidden' );
+			$( '#submit' ).addClass( 'hidden' );
+			console.log(formdata);
+			$.ajax({
+				type: 'POST',
+				data: formdata,
+				dataType: 'json',
+				processData: false,
+				contentType: false,
+				url: '/files/upload',
+				xhr: function() {
+								var myXhr = $.ajaxSettings.xhr();
+								if(myXhr.upload){
+										myXhr.upload.addEventListener('progress', progress, false);
+								}
+								return myXhr;
+				},
+				success: function(data){
+						if(data.status){
+							alert('File uploaded!');
+							location.reload();
+						} else {
+							console.log( data );
+							alert(data);
+						}
+				},
+				error: function(err){
+					console.log(err);
+				}
+			});
+		});
+	});
+h2= pwd
+button#newfolder.btn.btn-primary New Folder
+
+table.table.table-striped
+	thead
+		tr
+			th Filename
+			th Size
+			th Date Modified
+			th
+	tbody
+		each file in files
+			if file.path != pwd
+				tr
+					th
+						if file.folder
+							a(href='#{file.url}')= file.name
+						else if file.error
+							b.error= file.name
+						else
+							a(href='#{file.url}')= file.name
+					th= file.size
+					th
+						b= (new Date(file.dateModified)).toDateString()
+					th
+						if file.name != '..'
+							button.btn-link(
+								data-delete="/files/delete#{file.path}"
+								data-file= file.name
+								data-json="{hi:1}"
+								style="font-weight:bold;"
+							) Delete
+
+form.hidden#folder(method="PUT" action="/files/upload")
+	.form-group
+		input.form-control(type='hidden' name='folder' value='#{pwd}')
+		h3 Folder Name
+		input.form-control#foldername(type='text' name='folderName')
+		br
+		input.btn.btn-primary.form-control#submit(type='submit')
+
+form#upload(method="POST" action="/files/upload" enctype="multipart/form-data" )
+	.form-group
+		input.form-control(type='hidden' name='folder' value='#{pwd}')
+		h3 Upload A file
+		input.form-control#files(type='file' name='uploads' multiple)
+		br
+		input.btn.btn-primary.form-control#submit(type='submit')
+		.progress(style="height:31px")
+			.progress-bar.progress-bar-striped.active.hidden#progress(style="line-height:31px;width: 0%;min-width: 2em;cursor: not-allowed;") 0%
