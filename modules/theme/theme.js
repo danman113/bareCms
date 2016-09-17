@@ -38,11 +38,13 @@ module.exports = function( core, callback ) {
 		core.db.getPage( { 'url == ': url, 'admin != ': 0 } ).then( function( page ) {
 
 			var html = "";
+			var stat = null;
 			var valid = true;
 
 			try {
 
 				html = fs.readFileSync( filepath, 'utf8' );
+				stat = fs.statSync( filepath );
 
 			} catch ( e ) {
 
@@ -218,7 +220,7 @@ module.exports = function( core, callback ) {
 				valid = false;
 				fn = function() {
 
-					return e.toString()
+					return e.toString();
 
 				};
 
@@ -226,7 +228,7 @@ module.exports = function( core, callback ) {
 
 			if ( ! page ) fn = function() {
 
-				return "Template " + key + ' Undefined'
+				return "Template " + key + ' Undefined';
 
 			};
 
@@ -237,7 +239,7 @@ module.exports = function( core, callback ) {
 
 			var fn = function() {
 
-				return err.toString()
+				return err.toString();
 
 			};
 			theme.templateCache[ key ] = fn;
@@ -319,11 +321,13 @@ module.exports = function( core, callback ) {
 		core.db.getPage( { 'title == ': key, 'admin == ': admin } ).then( function( page ) {
 
 			var html = "";
+			var stat = null;
 			var valid = true;
 
 			try {
 
 				html = fs.readFileSync( filepath, 'utf8' );
+				stat = fs.statSync( filepath );
 
 			} catch ( e ) {
 
@@ -336,7 +340,7 @@ module.exports = function( core, callback ) {
 
 				if ( valid ) {
 
-					if ( page.data == html ) {
+					if (  (new Date(page.date)).getTime() >= (new Date(stat.mtime)).getTime() ) {
 
 						console.log( 'Template up to date.' );
 						deffered.resolve();

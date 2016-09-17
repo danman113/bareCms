@@ -504,8 +504,8 @@ function init( app, router, core, site ) {
 	app.use( bodyParser.json() );
 
 	app.use( bodyParser.urlencoded( {
-			extended: true
-		} ) );
+		extended: true
+	} ) );
 
 	app.use(
 		session(
@@ -520,8 +520,8 @@ function init( app, router, core, site ) {
 						maxAge: core.config.router.sessionAge
 					}
 				}
-			)
-		);
+		)
+	);
 
 	app.use(
 		'/static',
