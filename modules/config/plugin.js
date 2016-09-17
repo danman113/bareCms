@@ -80,7 +80,7 @@ module.exports = function( core, callback ) {
 	var pluginManager = {};
 	pluginManager.plugins = plugins;
 
-	pluginManager.startPlugins = function( core, app ) {
+	pluginManager.startPlugins = function( core, app, router, theme ) {
 
 		for ( var i = 0; i < plugins.length; i ++ ) {
 
@@ -88,7 +88,7 @@ module.exports = function( core, callback ) {
 			if ( plugin.loadOrder < 0 ) {
 
 				console.log( 'Starting plugin: ', plugin.name );
-				plugin.run( core, app );
+				plugin.run( core, app, router, theme );
 
 			}
 
@@ -96,7 +96,7 @@ module.exports = function( core, callback ) {
 
 	}
 
-	pluginManager.endPlugins = function( core, app ) {
+	pluginManager.endPlugins = function( core, app, router, theme ) {
 
 		for ( var i = 0; i < plugins.length; i ++ ) {
 
@@ -104,7 +104,7 @@ module.exports = function( core, callback ) {
 			if ( plugin.loadOrder >= 0 ) {
 
 				console.log( 'Starting plugin: ', plugin.name );
-				plugin.run( core, app );
+				plugin.run( core, app, router, theme );
 
 			}
 

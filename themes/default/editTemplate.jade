@@ -6,37 +6,37 @@ link(rel="stylesheet" href="/staticAdmin/default/codemirror/codemirror.css")
 link(rel="stylesheet" href="/staticAdmin/default/codemirror/theme/monokai.css")
 
 script.
-  $(document).ready( function (){
+	$(document).ready( function (){
 
-    var dataTextArea = addCodeMirror( document.getElementById( 'data' ) );
-    dynamicForm('#template', function( e, data){
-      e.preventDefault();
-      data.data = dataTextArea.getValue();
-      delete data[ 'undefined' ];
-      console.log(data);
-      $.ajax({
-        type: 'POST',
-        data: data,
-        url: '/template/' + data.title,
-        success: function(data){
-            if(data.status){
-                alert('Template edited!');
-            } else {
-                alert(data);
-            }
-        },
-        error: function(err){
-            console.log(err);
-        }
-      });
-    });
-  });
+		var dataTextArea = addCodeMirror( document.getElementById( 'data' ) );
+		dynamicForm('#template', function( e, data){
+			e.preventDefault();
+			data.data = dataTextArea.getValue();
+			delete data[ 'undefined' ];
+			console.log(data);
+			$.ajax({
+				type: 'POST',
+				data: data,
+				url: '/template/' + data.title,
+				success: function(data){
+						if(data.status){
+								alert('Template edited!');
+						} else {
+								alert(data);
+						}
+				},
+				error: function(err){
+						console.log(err);
+				}
+			});
+		});
+	});
 form#template(method="POST")
-  .form-group
-    h3 Title
-    input.form-control(type='text' name='title' value='#{editPage.title}')
-    h3 Content
-    textarea.form-control#data(name='data' rows='15')= editPage.data
-    input.btn.btn-primary(type='submit')
+	.form-group
+		h3 Title
+		input.form-control(type='text' name='title' value='#{editPage.title}')
+		h3 Content
+		textarea.form-control#data(name='data' rows='15')= editPage.data
+		input.btn.btn-primary(type='submit')
 
 

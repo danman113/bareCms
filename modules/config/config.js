@@ -58,7 +58,6 @@ module.exports = function( args ) {
 		try {
 
 			var config = JSON.parse( fs.readFileSync( args.config, 'utf8' ) );
-			console
 			parseArgs( config, defaultConfig );
 
 		} catch ( e ) {

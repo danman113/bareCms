@@ -6,55 +6,55 @@ link(rel="stylesheet" href="/staticAdmin/default/codemirror/codemirror.css")
 link(rel="stylesheet" href="/staticAdmin/default/codemirror/theme/monokai.css")
 
 script.
-  $(function(){
-    var dataTextArea = addCodeMirror( document.getElementById( 'data' ) );
-    $("#page").submit(function( event ) {
-      var elements = $('#page').serializeArray();
-      var form = {};
-      for(var e in elements){
-        form[elements[e].name] = elements[e].value;
-      }
-      if(form.url[0] != '/')
-        form.url = '/'+form.url
-      if(form.url[form.url.length-1] == '/' && form.url!='/')
-        form.url = form.url.substr(0,form.url.length-1);
-      form.date = (new Date()).getTime();
-      console.log(form);
-      form.data = dataTextArea.getValue();
-      console.log('/pages'+form.url);
-      $.ajax({
-        url:'/pages'+form.url,
-        type:'put',
-        data:form,
-        success:function(data){
-          console.log(data);
-          if(data.status)
-            window.location.href = '/pages'+form.url;
-          else {
-            console.log(data.error);
-            alert(data.error);
-          }
-        },
-        error: function(err, body ){
-          console.log(err);
-          alert(err.responseJSON.error);
-        }
-      });
-      event.preventDefault();
-    });
-  })
+	$(function(){
+		var dataTextArea = addCodeMirror( document.getElementById( 'data' ) );
+		$("#page").submit(function( event ) {
+			var elements = $('#page').serializeArray();
+			var form = {};
+			for(var e in elements){
+				form[elements[e].name] = elements[e].value;
+			}
+			if(form.url[0] != '/')
+				form.url = '/'+form.url
+			if(form.url[form.url.length-1] == '/' && form.url!='/')
+				form.url = form.url.substr(0,form.url.length-1);
+			form.date = (new Date()).getTime();
+			console.log(form);
+			form.data = dataTextArea.getValue();
+			console.log('/pages'+form.url);
+			$.ajax({
+				url:'/pages'+form.url,
+				type:'put',
+				data:form,
+				success:function(data){
+					console.log(data);
+					if(data.status)
+						window.location.href = '/pages'+form.url;
+					else {
+						console.log(data.error);
+						alert(data.error);
+					}
+				},
+				error: function(err, body ){
+					console.log(err);
+					alert(err.responseJSON.error);
+				}
+			});
+			event.preventDefault();
+		});
+	})
 h1 New Page
 form#page(method="POST")
-  .form-group
-    each def,val in {url:'/',title:'Title',options:'{}'}
-      input.form-control(required type='text' id=val value=def name=val placeholder=val)
-      br
-    textarea#data.form-control(name='data' placeholder='data')
-    br
-    input#cache.form-control(checked type='checkbox' name='cache' )
-    br
-    select#template.form-control(required name='template' )
-      each val in admin.templates()
-        option(value=val) #{val}
-    br
-    input.btn.btn-primary(type='submit')
+	.form-group
+		each def,val in {url:'/',title:'Title',options:'{}'}
+			input.form-control(required type='text' id=val value=def name=val placeholder=val)
+			br
+		textarea#data.form-control(name='data' placeholder='data')
+		br
+		input#cache.form-control(checked type='checkbox' name='cache' )
+		br
+		select#template.form-control(required name='template' )
+			each val in admin.templates()
+				option(value=val) #{val}
+		br
+		input.btn.btn-primary(type='submit')

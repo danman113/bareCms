@@ -1,0 +1,8 @@
+form#upload(method="POST" action="/files/upload" enctype="multipart/form-data" )
+	.form-group
+		h3 Folder
+		input.form-control(type='text' name='folder')
+		h3 Username
+		input.form-control(type='file' name='uploads' multiple)
+		br
+		input.btn.btn-primary.form-control(type='submit')

@@ -39,11 +39,11 @@ function dataAjax( method , success, error ){
             url: page,
             type: method,
             data: json,
-            success: function(data){success( data, element )},
-            error: function(err){error(err, element)}
+            success: function(data){success( data, element );},
+            error: function(err){error(err, element);}
         });
-    })
-};
+    });
+}
 
 function dynamicForm( formSelector, submit ){
     var formData = {};
@@ -84,6 +84,8 @@ function addCodeMirror( elem ) {
 
     var options = {
         keyMap: 'sublime',
+        showInvisibles: true,
+        indentWithTabs: true,
         autoCloseBrackets: true,
         matchBrackets: true,
         showCursorWhenSelecting: true,

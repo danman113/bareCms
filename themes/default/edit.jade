@@ -6,52 +6,52 @@ link(rel="stylesheet" href="/staticAdmin/default/codemirror/codemirror.css")
 link(rel="stylesheet" href="/staticAdmin/default/codemirror/theme/monokai.css")
 
 script.
-  $(document).ready( function (){
-   
-    var dataTextArea = addCodeMirror( document.getElementById( 'data' ) );
-    
-    var setupForm = function(){
-      dynamicForm('#page', function( e, data ) {
-        e.preventDefault();
-        data.data = dataTextArea.getValue();
-        delete data[ 'undefined' ];
-        console.log( data );
+	$(document).ready( function (){
+	 
+		var dataTextArea = addCodeMirror( document.getElementById( 'data' ) );
+		
+		var setupForm = function(){
+			dynamicForm('#page', function( e, data ) {
+				e.preventDefault();
+				data.data = dataTextArea.getValue();
+				delete data[ 'undefined' ];
+				console.log( data );
 
-        $.ajax({
-          type: 'POST',
-          data: data,
-          success: function(data){
-              if(data.status){
-                  alert('Page edited!');
-              } else {
-                  alert(data.error);
-              }
-          },
-          error: function(err){
-              console.log(err);
-          }
-        });
-      });
-    };
+				$.ajax({
+					type: 'POST',
+					data: data,
+					success: function(data){
+							if(data.status){
+									alert('Page edited!');
+							} else {
+									alert(data.error);
+							}
+					},
+					error: function(err){
+							console.log(err);
+					}
+				});
+			});
+		};
 
-    setupForm();
+		setupForm();
 
-  });
+	});
 h1
-  a(href='/pages#{editPage.url}')= editPage.url
+	a(href='/pages#{editPage.url}')= editPage.url
 form#page(method="POST")
-  .form-group
-    h3 Title
-    input.form-control(type='text' name='title' value='#{editPage.title}')
-    h3 Content
-    textarea#data.form-control(name='data' rows='15')= editPage.data
-    h3 Cache
-    input.form-control(type='checkbox' name='cache' checked=editPage.cache)
-    h3 Template
-    select.form-control(name='template' value='#{editPage.template}')
-      each val in admin.templates()
-        option(value=val selected=(editPage.template == val)) #{val}
-    br
-    input.btn.btn-primary(type='submit')
+	.form-group
+		h3 Title
+		input.form-control(type='text' name='title' value='#{editPage.title}')
+		h3 Content
+		textarea#data.form-control(name='data' rows='15')= editPage.data
+		h3 Cache
+		input.form-control(type='checkbox' name='cache' checked=editPage.cache)
+		h3 Template
+		select.form-control(name='template' value='#{editPage.template}')
+			each val in admin.templates()
+				option(value=val selected=(editPage.template == val)) #{val}
+		br
+		input.btn.btn-primary(type='submit')
 
 

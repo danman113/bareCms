@@ -1,23 +1,24 @@
 a.btn.btn-primary( href="/admin/template" ) New Template
 
 table.table.table-striped
-  thead
-    tr
-      th Title
-      th
-  tbody
-    each template in admin.templates()
-      tr
-        th
-          b= template
-        th
-          if template != 'blank'
-            button.btn-link(
-              data-delete="/template/#{template}"
-              style="font-weight:bold;"
-              data-json="{hi:1}"
-            ) Delete
-          
-          a(href="/template/#{template}")
-            b Edit
-          
+	thead
+		tr
+			th Title
+			th
+	tbody
+		each template in admin.templates()
+			if template != 'blank'
+				tr
+					th
+						b= template
+					th
+					
+						button.btn-link(
+							data-delete="/template/#{template}"
+							style="font-weight:bold;"
+							data-json="{hi:1}"
+						) Delete
+					
+						a(href="/template/#{template}")
+							b Edit
+						

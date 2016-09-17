@@ -1,34 +1,34 @@
 script.
-  $(document).ready( function (){
-       dynamicForm('#register', function( e, data){
-           e.preventDefault();
-           console.log(data);
-           $.ajax({
-              type: 'POST',
-              data: data,
-              success: function(data){
-                  if(data.status){
-                      alert('Account created!');
-                      window.location = '/login';
-                  } else {
-                      alert(data.error);
-                  }
-              },
-              error: function(err){
-                  console.log( err );
-                  alert(err.responseJSON.error);
-              }
-          });
-       });
-  });
+	$(document).ready( function (){
+			 dynamicForm('#register', function( e, data){
+					 e.preventDefault();
+					 console.log(data);
+					 $.ajax({
+							type: 'POST',
+							data: data,
+							success: function(data){
+									if(data.status){
+											alert('Account created!');
+											window.location = '/login';
+									} else {
+											alert(data.error);
+									}
+							},
+							error: function(err){
+									console.log( err );
+									alert(err.responseJSON.error);
+							}
+					});
+			 });
+	});
 
 form#register(method="POST")
-  .form-group
-    h3 Username
-    input.form-control(type='text' name='username')
-    h3 Password
-    input.form-control(type='password' name='password')
-    br
-    input.form-control(type='password' name='password2')
-    br
-    input.btn.btn-primary.form-control(type='submit')
+	.form-group
+		h3 Username
+		input.form-control(type='text' name='username')
+		h3 Password
+		input.form-control(type='password' name='password')
+		br
+		input.form-control(type='password' name='password2')
+		br
+		input.btn.btn-primary.form-control(type='submit')
