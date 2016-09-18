@@ -7,7 +7,8 @@ module.exports = function( args ) {
 	// Default config, with most major parts being relative to main folder structure
 	var defaultConfig = {
 		core: {
-			pluginFolder: path.resolve( path.dirname( require.main.filename ), './plugins/' )
+			pluginFolder: path.resolve( path.dirname( require.main.filename ), './plugins/' ),
+			customPluginFolder: path.resolve( path.dirname( require.main.filename ), './plugins/' )
 		},
 		db: {
 			filename: path.resolve( path.dirname( require.main.filename ), './database.sql' ),
@@ -23,11 +24,14 @@ module.exports = function( args ) {
 			openRegistration: true,
 			sessionSecure: false,
 			loginAttempts: 6,
-			loginTimeout: 1000 * 60 * 5
+			loginTimeout: 1000 * 60 * 30
 		},
 		theme: {
 			folder: path.resolve( path.dirname( require.main.filename ), './themes/' ),
-			theme: 'default'
+			default: path.resolve( path.dirname( require.main.filename ), './themes/' ),
+			custom: path.resolve( path.dirname( require.main.filename ), './themes/' ),
+			theme: 'default',
+			customTheme: 'default'
 		}
 	};
 
@@ -70,8 +74,6 @@ module.exports = function( args ) {
 	}
 
 	parseArgs( args, defaultConfig );
-
-
 
 	return defaultConfig;
 

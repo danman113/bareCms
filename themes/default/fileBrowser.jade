@@ -1,13 +1,13 @@
 script.
 	function progress( e ) {
 		if(e.lengthComputable){
-				var max = e.total;
-				var current = e.loaded;
+			var max = e.total;
+			var current = e.loaded;
 
-				var Percentage = (current * 100)/max;
-				$( '#progress' ).css( 'width', Percentage + '%' );
-				$( '#progress' ).text( Percentage.toFixed( 2 ) + '%' );
-				console.log(Percentage);
+			var Percentage = (current * 100)/max;
+			$( '#progress' ).css( 'width', Percentage + '%' );
+			$( '#progress' ).text( Percentage.toFixed( 2 ) + '%' );
+			console.log(Percentage);
 		}
 	}
 	$(document).ready( function() {
@@ -74,20 +74,20 @@ script.
 				contentType: false,
 				url: '/files/upload',
 				xhr: function() {
-								var myXhr = $.ajaxSettings.xhr();
-								if(myXhr.upload){
-										myXhr.upload.addEventListener('progress', progress, false);
-								}
-								return myXhr;
+					var myXhr = $.ajaxSettings.xhr();
+					if(myXhr.upload){
+							myXhr.upload.addEventListener('progress', progress, false);
+					}
+					return myXhr;
 				},
 				success: function(data){
-						if(data.status){
-							alert('File uploaded!');
-							location.reload();
-						} else {
-							console.log( data );
-							alert(data);
-						}
+					if(data.status){
+						alert('File uploaded!');
+						location.reload();
+					} else {
+						console.log( data );
+						alert(data);
+					}
 				},
 				error: function(err){
 					console.log(err);
@@ -134,7 +134,7 @@ form.hidden#folder(method="PUT" action="/files/upload")
 		h3 Folder Name
 		input.form-control#foldername(type='text' name='folderName')
 		br
-		input.btn.btn-primary.form-control#submit(type='submit')
+		input.btn.btn-primary.form-control(type='submit')
 
 form#upload(method="POST" action="/files/upload" enctype="multipart/form-data" )
 	.form-group

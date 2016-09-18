@@ -28,7 +28,7 @@ module.exports = function() {
 
 					deffered.reject( err );
 
-				} )
+				} );
 
 			}
 

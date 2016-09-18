@@ -172,14 +172,29 @@ module.exports = function( core, callback ) {
 				)
 			)( core, theme, function() {
 
-				theme.initTemplates( function() {} );
+				theme.initTemplates( function() {
+					theme.initCustomTheme();
+				} );
 
 			} );
 
 		} catch ( e ) {
 
-			console.log( 'Error setting theme!' );
+			console.log( 'Error setting theme!', e );
 
+		}
+
+	};
+
+	theme.initCustomTheme = function() {
+
+		if( core.config.theme.folder == core.config.theme.custom ) {
+			// console.log( 'No custom theme selected' );
+		} else {
+			console.log( 'Install second theme' );
+			core.config.theme.folder = core.config.theme.custom;
+			core.config.theme.theme = core.config.theme.customTheme;
+			theme.initTheme();
 		}
 
 	};
@@ -482,7 +497,6 @@ module.exports = function( core, callback ) {
 
 	};
 
-	// FIX THIS
 	theme._mergeFolders = function( srcFolder, destFolder ) {
 
 		var deffered = q.defer();
