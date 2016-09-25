@@ -42,11 +42,12 @@ module.exports = function( core, app, router, theme ) {
 		var toast = 'File' + ( req.files.length > 1? 's' :'' ) + ' uploaded: ';
 
 		for (var i = req.files.length - 1; i >= 0; i--) {
-		 	toast += req.files[i].originalname + ' ';
-		 } 
+		 	toast += req.files[ i ].originalname + ' ';
+		}
 
 		router.setToast( req, toast );
 
+		res.status( 201 );
 		res.send( { status: 1 } );
 
 	} );
@@ -60,7 +61,10 @@ module.exports = function( core, app, router, theme ) {
 			);
 			fs.mkdir( folderPath, function( err ) {
 				if( err ) res.send( { status: 0, error: err.toString() } );
-				else res.send( { status: 1 } );
+				else {
+					res.status( 201 );
+					res.send( { status: 1 } );
+				}
 			} );
 		} else {
 			res.send( { status: 0, error: "Folder must have a name" } );
