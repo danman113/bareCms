@@ -9,7 +9,6 @@
   "author": "Daniel Berezin",
   "license": "MIT",
   "dependencies": {
-    "bcrypt": "^0.8.7",
     "body-parser": "^1.15.2",
     "crypto": "0.0.3",
     "express": "^4.14.0",
@@ -25,6 +24,10 @@
   },
   "directories": {
     "test": "tests"
+  },
+  "optionalDependencies": {
+    "bcrypt": "^0.8.7",
+    "bcryptjs": "^2.3.0"
   },
   "devDependencies": {},
   "repository": {

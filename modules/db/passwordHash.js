@@ -1,4 +1,12 @@
-var bcrypt = require( 'bcrypt' );
+var bcrypt = null;
+
+try {
+	bcrypt = require( 'bcrypt' );
+} catch( e ) {
+	console.log( 'Cannot use standard bcrypt, using bcryptjs' );
+	bcrypt = require( 'bcryptjs' );
+}
+
 var q = require( 'q' );
 
 
