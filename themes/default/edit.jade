@@ -43,6 +43,8 @@ form#page(method="POST")
 	.form-group
 		h3 Title
 		input.form-control(type='text' name='title' value='#{editPage.title}')
+		h3 Options
+		input.form-control(type='text' name='options' value='#{editPage.options}')
 		h3 Content
 		textarea#data.form-control(name='data' rows='15')= editPage.data
 		h3 Cache
