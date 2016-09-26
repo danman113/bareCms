@@ -5,19 +5,20 @@ var fs = require( 'fs' );
 module.exports = function( args ) {
 
 	// Default config, with most major parts being relative to main folder structure
+
 	var defaultConfig = {
 		core: {
-			pluginFolder: path.resolve( path.dirname( require.main.filename ), './plugins/' ),
-			customPluginFolder: path.resolve( path.dirname( require.main.filename ), './plugins/' )
+			pluginFolder: path.resolve( path.dirname( __dirname ), '..', './plugins/' ),
+			customPluginFolder: path.resolve( path.dirname( __dirname ), '..', './plugins/' )
 		},
 		db: {
-			filename: path.resolve( path.dirname( require.main.filename ), './database.sql' ),
-			passwordHash: path.resolve( path.dirname( require.main.filename ), './modules/db/passwordHash.js' )
+			filename: path.resolve( path.dirname( __dirname ), '..', './database.sql' ),
+			passwordHash: path.resolve( path.dirname( __dirname ), '..', './modules/db/passwordHash.js' )
 		},
 		router: {
 			port: 8080,
-			staticURL: path.resolve( path.dirname( require.main.filename ), './static/' ),
-			staticAdminURL: path.resolve( path.dirname( require.main.filename ), './staticAdmin/' ),
+			staticURL: path.resolve( path.dirname( __dirname ), '..', './static/' ),
+			staticAdminURL: path.resolve( path.dirname( __dirname ), '..', './staticAdmin/' ),
 			sessionSecret: ( Math.random() * ( new Date() ).getTime() ).toString( 16 ),
 			sessionName: ( Math.random() * ( new Date() ).getTime() * 2 ).toString( 16 ),
 			sessionAge: 600000,
@@ -27,9 +28,9 @@ module.exports = function( args ) {
 			loginTimeout: 1000 * 60 * 30
 		},
 		theme: {
-			folder: path.resolve( path.dirname( require.main.filename ), './themes/' ),
-			default: path.resolve( path.dirname( require.main.filename ), './themes/' ),
-			custom: path.resolve( path.dirname( require.main.filename ), './themes/' ),
+			folder: path.resolve( path.dirname( __dirname ), '..', './themes/' ),
+			default: path.resolve( path.dirname( __dirname ), '..', './themes/' ),
+			custom: path.resolve( path.dirname( __dirname ), '..', './themes/' ),
 			theme: 'default',
 			customTheme: 'default'
 		}
