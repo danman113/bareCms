@@ -1,13 +1,13 @@
 {
   "name": "barecms",
   "version": "1.0.0",
-  "description": "",
+  "description": "A moduar, high-performance cms where all pages are templates",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "(cd tests/ && py.test)"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Daniel Berezin",
+  "license": "MIT",
   "dependencies": {
     "bcrypt": "^0.8.7",
     "body-parser": "^1.15.2",
@@ -16,13 +16,28 @@
     "express-session": "^1.14.1",
     "fs-extra": "^0.30.0",
     "http": "0.0.0",
-    "install": "^0.8.1",
     "jade": "^1.11.0",
     "minimist": "^1.2.0",
     "multer": "^1.2.0",
-    "npm": "^3.10.6",
     "q": "^1.4.1",
     "sqlite3": "^3.1.4",
     "squel": "^5.3.3"
-  }
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/danman113/bareCms.git"
+  },
+  "keywords": [
+    "cms",
+    "node.js",
+    "sqlite"
+  ],
+  "bugs": {
+    "url": "https://github.com/danman113/bareCms/issues"
+  },
+  "homepage": "https://github.com/danman113/bareCms#readme"
 }
