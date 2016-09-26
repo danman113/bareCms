@@ -144,7 +144,7 @@ module.exports = function( core, app, router, theme ) {
 					res,
 					next,
 					{ "url == ": '/edit', 'admin ==': 1 },
-					{ site: router.site.general, admin: router.site.admin, editPage: pageData },
+					{ site: router.site.general, admin: router.site.admin, editPage: pageData, toasts: router.getToasts( req ) },
 					true
 				);
 
