@@ -85,6 +85,28 @@ module.exports = function( core, app, router, theme ) {
 
 	} );
 
+	app.get( '/admin/navigation', function( req, res, next ) {
+
+		core.db.getSettings().then( function( data ) {
+			var settings = data;
+			return core.db.get( 'pages', [ 'url', 'title' ], { 'admin ==': 0  } ).then( function( pages ){
+				router.sendStaticPage(
+					req,
+					res,
+					next,
+					{ "url == ": '/navigation', 'admin ==': 1 },
+					{ site: router.site.general, admin: router.site.admin, pages: pages, settings: settings, toasts: router.getToasts( req ) },
+					true
+				);	
+			} );
+		} ).fail( function( err ) {
+
+			res.send( err );
+
+		} );
+
+	} );
+
 	app.get( '/admin/settings', function( req, res, next ) {
 
 		core.db.getSettings().then( function( data ) {
