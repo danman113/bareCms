@@ -1,51 +1,39 @@
-script(src="https://code.jquery.com/ui/1.12.1/jquery-ui.js")
+link(href='/staticAdmin/default/navigation/navigation.css', rel='stylesheet')
+link(href='/staticAdmin/default/navigation/nestable.css', rel='stylesheet')
+script(src="//code.jquery.com/ui/1.12.1/jquery-ui.js")
+script(src="/staticAdmin/default/navigation/jquery.nestable.js")
 script.
 	$( function() {
-		$( "#navigation, #pages" ).sortable({
-			connectWith: ".dragger"
-		}).disableSelection();
+		//- $( "#navigation, #pages" ).sortable({
+		//- 	connectWith: ".dragger"
+		//- }).disableSelection();
+		$('.dd').nestable({});
 	} );
 h1 Configure your navbar!
-style.
-	#navigation {
-		float: left;
-		height: 120%;
-	}
-
-	#pages {
-		float: right;
-		height: 120%;
-	}
-
-	li.draggable {
-		border: 1px solid orange;
-		background-color: orange ;
-		margin: 0 5px 5px 5px;
-		padding: 5px;
-		font-size: 1.2em;
-		width: 190px;
-	}
 
 - var navigation = site.settings.navigation
 
-
-#lists
-	ul.dragger#navigation
-		each val, key in navigation
-			li.form-group.draggable
-				b Url
-				br
-				input.form-control(type='text' name='url' value='#{key}')
-				b Label
-				br
-				input.form-control(type='text' name='label' value='#{val}')
-	ul.dragger#pages
-		each page in pages
-			if ( !( ('/pages' + page.url) in navigation) )
-				li.form-group.draggable
-					b Url
-					br
-					input.form-control(type='text' name='url' value='/pages#{page.url}')
-					b Label
-					br
-					input.form-control(type='text' name='label' value='#{page.title}')
+mixin parseList(nav)
+	ol.dd-list
+		each val in nav
+			li.dd-item.dd3-item(data-id='13')
+				.dd-handle.dd3-handle
+				a.dd3-content(href='#')
+					span= val.title || val.name
+					span  (
+					span= val.url
+					span )
+				if( val.children )
+					+parseList(val.children)
+- var error = typeof navigation == 'string'
+if( error )
+	h1 Error parsing navigation
+else
+	#nnavigation.dd
+		+parseList(navigation)
+- var error = typeof pages == 'string'
+if( error )
+	h1 Error parsing pages
+else
+	#npages.dd
+		+parseList(pages)

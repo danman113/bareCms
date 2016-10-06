@@ -1,0 +1,46 @@
+@import 'funcs';
+
+$dragger: #f8f8f8;
+
+.well {
+	height: 120%;
+	border: 1px solid;
+	padding-left: 0px;
+	min-width: 222px;
+	min-height: 200px;
+	padding: 10px;
+	@include border-radius(5px);
+}
+
+#navigation {
+	float: left;
+	@extend .well;
+}
+
+#pages {
+	float: right;
+	@extend .well;
+}
+
+@media (max-width: 500px) {
+	#pages {
+		float: left;
+		width: 100%;
+	}
+	#navigation {
+		float: left;
+		width: 100%;
+	}
+}
+
+li.draggable {
+	border: 2px solid darken( $dragger, 10% );
+	background-color: $dragger;
+	margin: 10px 5px 10px 5px;
+	padding: 10px;
+	font-size: 1.2em;
+	width: 190px;
+	list-style-type: none;
+	@include border-radius(10px);
+	@include box-shadow(0px, 0px, 10px, rgba(0,0,0,0.1));
+}

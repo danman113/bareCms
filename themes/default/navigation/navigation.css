@@ -1,0 +1,39 @@
+.well, #navigation, #pages {
+  height: 120%;
+  border: 1px solid;
+  padding-left: 0px;
+  min-width: 222px;
+  min-height: 200px;
+  padding: 10px;
+  -webkit-border-radius: 5px;
+  border-radius: 5px;
+  background-clip: padding-box; }
+
+#navigation {
+  float: left; }
+
+#pages {
+  float: right; }
+
+@media (max-width: 500px) {
+  #pages {
+    float: left;
+    width: 100%; }
+  #navigation {
+    float: left;
+    width: 100%; } }
+
+li.draggable {
+  border: 2px solid #dfdfdf;
+  background-color: #f8f8f8;
+  margin: 10px 5px 10px 5px;
+  padding: 10px;
+  font-size: 1.2em;
+  width: 190px;
+  list-style-type: none;
+  -webkit-border-radius: 10px;
+  border-radius: 10px;
+  background-clip: padding-box;
+  -webkit-box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); }

@@ -21,6 +21,7 @@ module.exports = function( core, theme, callback ) {
 			theme.addAdminPageFromFile( '/login', 'login.jade', 'adminBlank' ),
 			theme.addAdminPageFromFile( '/register', 'register.jade', 'adminBlank' ),
 			theme.ensureConsistencyAdmin( 'codemirror' ),
+			theme.ensureConsistencyAdmin( 'navigation' ),
 			theme.ensureConsistencyStatic( 'admin' ),
 			theme.ensureConsistencyStatic( 'bootstrap' ),
 			theme.setTemplate( 'basic', 'template_1.jade' ),
@@ -33,5 +34,5 @@ module.exports = function( core, theme, callback ) {
 	}, function( err ) {
 		console.log( 'Error initializing theme!' );
 		callback( err );
-	} )
+	} );
 };
