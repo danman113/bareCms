@@ -4,6 +4,7 @@ html(lang="en")
 		title= title
 		meta(name='viewport', content='width=device-width, initial-scale=1.0')
 		link(href='/static/default/bootstrap/bootstrap.min.css', rel='stylesheet')
+		link(href='/static/default/admin/admin.css', rel='stylesheet')
 		script(src='/static/default/bootstrap/jquery-2.2.4.min.js')
 		script(src='/static/default/bootstrap/bootstrap.min.js')
 		script(src='/static/default/admin/admin.js')
@@ -28,7 +29,9 @@ html(lang="en")
 						li
 							a(href='/admin/files') Files
 						li
-							a(href='/admin/settings') Settings 
+							a(href='/admin/navigation') Nav
+						li
+							a(href='/admin/settings') Settings
 					form.navbar-form.navbar-left(role='search' method='GET' action='/admin/pages')
 						.form-group
 							input.form-control(type='text', placeholder='Search' name='search')

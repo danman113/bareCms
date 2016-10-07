@@ -4,36 +4,153 @@ script(src="//code.jquery.com/ui/1.12.1/jquery-ui.js")
 script(src="/staticAdmin/default/navigation/jquery.nestable.js")
 script.
 	$( function() {
-		//- $( "#navigation, #pages" ).sortable({
-		//- 	connectWith: ".dragger"
-		//- }).disableSelection();
+		var lastButton = null;
+		$('#edit').on('show.bs.modal', function (event) {
+			var button = $(event.relatedTarget);
+			lastButton = button;
+			var btitle = button.data('title');
+			var burl = button.data('url');
+			var modal = $(this);
+			$('#title').val(btitle);
+			$('#url').val(burl);
+		} );
+		$('#save').click( function( e ) {
+			console.log('Editing', lastButton);
+			console.log('Title', lastButton.find('.editTitle'));
+			console.log('Url', lastButton.find('.editURL'));
+			var title = $('#title').val();
+			var url = $('#url').val();
+			var data = $(lastButton).data();
+			console.log(data);
+			$(lastButton.find('.editTitle')).text(title);
+			$(lastButton.find('.editURL')).text(url);
+			data.url = url;
+			data.title = title;
+			console.log(arguments);
+		} );
+		$('#saveNav').click( function( e ) {
+			var edit = $('#nnavigation').nestable('serialize');
+			var d = {'navigation':JSON.stringify(edit)};
+			console.log(d);
+			e.preventDefault();
+			$.ajax( {
+				type: 'POST',
+				url: '/settings/',
+				data: d,
+				success: function(data){
+					if(data.status){
+						alert('Navigation Updated!');
+					} else {
+						alert(data.error);
+					}
+				},
+				error: function(err){
+					console.log(err);
+				}
+			} );
+		} );
+		$('#add').click( function() {
+			if( $( "#npages" ).find('.dd-empty') ){
+				$( "#npages" ).find('.dd-empty').each( function( i, e ){
+					e.remove();
+				} )
+				$( "#npages" ).append( $('#example').clone().removeClass('hidden') );
+			}
+		} );
+		$('.dd').on('change', function() {
+			$( "#npages" ).find('.dd-empty').each( function( i, e ){
+				if( i != 0)
+					e.remove();
+			} )
+			$( "#nnavigation" ).find('.dd-empty').each( function( i, e ){
+				if( i != 0)
+					e.remove();
+			} )
+		});
 		$('.dd').nestable({});
 	} );
+
 h1 Configure your navbar!
+
+#edit.modal.fade(tabindex='-1', role='dialog')
+	.modal-dialog(role='document')
+		.modal-content
+			.modal-header
+				button.close(type='button', data-dismiss='modal')
+					span(aria-hidden='true') ×
+				h4 Edit
+			.modal-body
+				form
+					.form-group
+						label.control-label(for='title') Title:
+						input#title.form-control(type='text')
+					.form-group
+						label.control-label(for='url') URL:
+						input#url.form-control(type='text')
+			.modal-footer
+				button#save.btn.btn-default(type='button', data-dismiss='modal').
+					Save
 
 - var navigation = site.settings.navigation
 
 mixin parseList(nav)
-	ol.dd-list
-		each val in nav
-			li.dd-item.dd3-item(data-id='13')
-				.dd-handle.dd3-handle
-				a.dd3-content(href='#')
-					span= val.title || val.name
-					span  (
-					span= val.url
-					span )
-				if( val.children )
-					+parseList(val.children)
-- var error = typeof navigation == 'string'
-if( error )
-	h1 Error parsing navigation
-else
-	#nnavigation.dd
-		+parseList(navigation)
-- var error = typeof pages == 'string'
-if( error )
-	h1 Error parsing pages
-else
-	#npages.dd
-		+parseList(pages)
+	if( nav.length < 1 )
+		.dd-empty
+	else
+		ol.dd-list
+			each val in nav
+				li.dd-item.dd3-item(
+					data-title='#{val.title || val.name}'
+					data-url='#{val.url}'
+				)
+					.dd-handle.dd3-handle
+					a.dd3-content(
+						href='#'
+						data-title='#{val.title || val.name}'
+						data-url='#{val.url}'
+						data-toggle="modal"
+						data-target="#edit"
+					)
+						span.editTitle= val.title || val.name
+						span  (
+						span.editURL= val.url
+						span )
+					if( val.children )
+						+parseList(val.children)
+		
+- var error = typeof navigation == 'string' || !navigation
+.nnl
+	if( error )
+		h1 Error parsing navigation
+	else
+		#nnavigation.dd
+			+parseList(navigation)
+	- var error = typeof pages == 'string' || !pages
+	if( error )
+		h1 Error parsing pages
+	else
+		#npages.dd
+			+parseList(pages)
+.clearfix
+br
+.pull-left
+	button#saveNav.btn.btn-primary(type='button') Save
+.pull-right
+	button#add.btn.btn-default(type='button') Add
+
+li#example.hidden.dd-item.dd3-item(
+	data-title='Title'
+	data-url='/pages/'
+)
+	.dd-handle.dd3-handle
+	a.dd3-content(
+		href='#'
+		data-title='Title'
+		data-url='/pages/'
+		data-toggle="modal"
+		data-target="#edit"
+	)
+		span.editTitle Title
+		span  (
+		span.editURL /pages/
+		span )
