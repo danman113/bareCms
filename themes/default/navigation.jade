@@ -20,7 +20,7 @@ script.
 			console.log('Url', lastButton.find('.editURL'));
 			var title = $('#title').val();
 			var url = $('#url').val();
-			var data = $(lastButton).data();
+			var data = $(lastButton).parent().data();
 			console.log(data);
 			$(lastButton.find('.editTitle')).text(title);
 			$(lastButton.find('.editURL')).text(url);
