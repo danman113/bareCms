@@ -8,7 +8,7 @@ mixin renderNav( nav )
 					+renderNav(val.children)
 		else
 			li
-				a(href='#{val.url}')= val.title
+				a(href='/pages#{val.url}')= val.title
 
 doctype html
 html(lang="en")
