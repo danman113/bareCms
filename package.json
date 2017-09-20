@@ -19,7 +19,7 @@
     "minimist": "^1.2.0",
     "multer": "^1.2.0",
     "q": "^1.4.1",
-    "sqlite3": "^3.1.4",
+    "sqlite3": "^3.1.11",
     "squel": "^5.3.3"
   },
   "directories": {
