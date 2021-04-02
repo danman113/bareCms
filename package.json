@@ -1,6 +1,6 @@
 {
   "name": "barecms",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "A moduar, high-performance cms where all pages are templates",
   "main": "index.js",
   "scripts": {
